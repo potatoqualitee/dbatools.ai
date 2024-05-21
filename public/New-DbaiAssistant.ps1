@@ -30,9 +30,6 @@ function New-DbaiAssistant {
     .PARAMETER Force
     Forces the creation of a new assistant, even if one already exists for the specified database.
 
-    .NOTES
-    Requires the dbatools and PSOpenAI modules to be installed.
-
     .EXAMPLE
     Get-DbaDatabase -SqlInstance localhost -Database WideWorldImporters | New-DbaiAssistant
 
