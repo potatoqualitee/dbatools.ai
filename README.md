@@ -6,9 +6,9 @@ It works so well, though. Check this out -- I used the laziest language possible
 
 ![dbatools.ai example output](copilot.example.png)
 
-As a developer, you'll note that building a copilot is not 100% magic. The natural language part is magic, certainly, but it still requires a schema to be provided for database queries. The copilot/OpenAI doesn't magically go in and get that for you. To see how this works, scroll way down to see the workflow.
-
 ![dbatools.ai example output](dtai.example.png)
+
+As a developer, you'll note that building a copilot is not 100% magic. The natural language part is magic, certainly, but it still requires a schema to be provided for database queries. The copilot/OpenAI doesn't magically go in and get that for you. To see how this works, scroll way down to see the workflow.
 
 ## Supported Platforms
 + Windows PowerShell 5.1
