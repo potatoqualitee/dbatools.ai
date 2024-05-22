@@ -26,3 +26,4 @@ foreach ($function in (Get-ChildItem "$ModuleRoot\public" -Filter "*.ps1" -Recur
 
 # Create powershell alias called dbai for Invoke-DbaiQuery
 Set-Alias -Name dbai -Value Invoke-DbaiQuery
+Set-Alias -Name dtai -Value Invoke-DbatoolsAI

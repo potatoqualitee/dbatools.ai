@@ -34,12 +34,13 @@
     FunctionsToExport = @(
         'ConvertTo-DbaiInstruction',
         'Invoke-DbaiQuery',
-        'New-DbaiAssistant'
+        'New-DbaiAssistant',
+        'Invoke-DbatoolsAI'
     )
 
     CmdletsToExport = @()
     VariablesToExport = @()
-    AliasesToExport   = @('dbai')
+    AliasesToExport   = @('dbai', 'dtai')
 
     PrivateData = @{
         PSData = @{
