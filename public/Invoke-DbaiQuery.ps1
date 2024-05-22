@@ -113,14 +113,14 @@ function Invoke-DbaiQuery {
                 $script:threadcache[$querykey].assistant = $assistant
             }
 
-            $null = PSOpenAI\Add-ThreadMessage -Thread $thread.id -Role user -Message $msg
-            $run = PSOpenAI\Start-ThreadRun -Thread $thread.Id -Assistant $assistant.Id
+            $null = PSOpenAI\Add-ThreadMessage -ThreadId $thread.id -Role user -Message $msg
+            $run = PSOpenAI\Start-ThreadRun -ThreadId $thread.id -Assistant $assistant.Id
             $PSDefaultParameterValues["*:RunId"] = $run.id
 
             Write-Progress -Status "Waiting for run to complete" -PercentComplete ((3 / 10) * 100)
             $runcount = 0
             while ($null -eq $rundata -and $runcount -lt 25) {
-                $rundata = PSOpenAI\Get-ThreadRun -Thread $thread.id
+                $rundata = PSOpenAI\Get-ThreadRun -ThreadId $thread.id
                 Start-Sleep -Milliseconds 300
                 $runcount++
             }
@@ -137,7 +137,7 @@ function Invoke-DbaiQuery {
             $runcount = 0
             while ($rundata.status -notin "requires_action", "completed" -and $runcount -lt 25) {
                 Start-Sleep -Milliseconds 300
-                $rundata = PSOpenAI\Get-ThreadRun -Thread $thread.id
+                $rundata = PSOpenAI\Get-ThreadRun -ThreadId $thread.id
                 $runcount++
             }
 
@@ -169,7 +169,7 @@ function Invoke-DbaiQuery {
                             $sql = $null
                         }
                     } catch {
-                        Write-Warning "Failed to parse arguments: $_"
+                        Write-Warning "Error: $_ Failed to parse arguments: $arguments"
                         continue
                     }
 
@@ -235,7 +235,7 @@ function Invoke-DbaiQuery {
                     $runcount = 0
                     while ($null -eq $rundata.usage.completion_tokens -and $runcount -lt 45) {
                         Start-Sleep -Milliseconds 300
-                        $rundata = PSOpenAI\Get-ThreadRun -Thread $thread.id
+                        $rundata = PSOpenAI\Get-ThreadRun -ThreadId $thread.id
                         $runcount++
                     }
 
@@ -257,7 +257,7 @@ function Invoke-DbaiQuery {
             $runcount = 0
             while ($null -eq $messages.content.text.value -and $runcount -lt 25) {
                 Start-Sleep -Milliseconds 300
-                $messages = PSOpenAI\Get-ThreadMessage -Thread $thread.id |
+                $messages = PSOpenAI\Get-ThreadMessage -ThreadId $thread.id |
                     Where-Object role -eq assistant |
                     Select-Object -First 1
                 $runcount++
