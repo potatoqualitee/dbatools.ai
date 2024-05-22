@@ -155,7 +155,7 @@ As mentioned earlier, the assistant uses GPT-4o by default, which has a 128k con
 
 ## dtai Workflow
 
-The workflow of Invoke-DbatoolsAI can be summarized as follows:
+The workflow of `Invoke-DbatoolsAI` can be summarized as follows:
 
 0. You as the devloper build an assistant just once. This assistant is trained to understand and generate dbatools commands.
 1. The user provides a natural language query to execute a dbatools command.
@@ -189,7 +189,7 @@ linkStyle default stroke:#333333,stroke-width:2px,fill:none;
 
 ## dbai Workflow
 
-The workflow for Invoke-DbaiQuery can be summarized as follows:
+The workflow for `Invoke-DbaiQuery` can be summarized as follows:
 
 0. You build an assistant just once. This assistant contains the schema of your db.
 1. The user asks the assistant a question.
