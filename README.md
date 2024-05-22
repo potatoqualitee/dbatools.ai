@@ -1,12 +1,14 @@
 # dbatools.ai: A Copilot for SQL Server Databases
 
-dbatools.ai is a PowerShell module that acts as a helpful assistant for SQL Server databases. It lets developers and DBAs explore their databases using plain English commands. This project is a proof of concept designed to show PowerShell and .NET developers how to create a database assistant using OpenAI's advanced language models.
+dbatools.ai is a PowerShell module that acts as a helpful assistant for SQL Server databases and dbatools operations. It lets developers and DBAs explore their databases using plain English commands and execute dbatools commands using natural language queries. This project is a proof of concept designed to show PowerShell and .NET developers how to create a database assistant and a dbatools copilot using OpenAI's advanced language models.
 
 It works so well, though. Check this out -- I used the laziest language possible and it still came through.
 
 ![dbatools.ai example output](copilot.example.png)
 
-As a developer,  you'll note that building a copilot is not 100% magic. The natural language part is magic, certainly, but it still requires a schema to be provided. The copilot/OpenAI doesn't magically go in and get that for you. To see how this works, scroll down to see the workflow.
+As a developer, you'll note that building a copilot is not 100% magic. The natural language part is magic, certainly, but it still requires a schema to be provided for database queries. The copilot/OpenAI doesn't magically go in and get that for you. To see how this works, scroll way down to see the workflow.
+
+![dbatools.ai example output](dtai.example.png)
 
 ## Supported Platforms
 + Windows PowerShell 5.1
@@ -58,7 +60,44 @@ Invoke-DbaiQuery @parms
 
 ## Usage
 
-dbatools.ai provides three main functions to interact with your SQL Server databases:
+dbatools.ai provides several functions to interact with your SQL Server databases:
+
+### Invoke-DbaiQuery
+
+Alias: `dbai`
+
+Executes a natural language query on a specified SQL Server database. This function takes your query, passes it to the OpenAI language model, which determines whether it requires a direct response or a SQL query execution. If a SQL query is needed, the function checks the query's safety and executes it against the database, returning the results.
+
+```powershell
+# use defaults to connect to Northwind on localhost
+dbai What beverages do we sell?
+```
+
+```powershell
+$parms = @{
+    SqlInstance = "sql01"
+    Database = "AdventureWerks"
+    Message = "What are the top 5 selling products?"
+}
+
+Invoke-DbaiQuery @parms
+```
+
+### Invoke-DbatoolsAI
+
+Alias: `dtai`
+
+Executes a natural language query to perform dbatools operations. It utilizes an AI assistant to generate the corresponding dbatools command and executes it.
+
+Currently, only Copy-DbaDatabase is supported.
+
+```powershell
+Invoke-DbatoolsAI -Message "Copy the SalesDB database from ServerA to ServerB using the network share \\NetworkPath"
+
+#or
+
+dtai Copy the SalesDB database from ServerA to ServerB using the network share \\NetworkPath
+```
 
 ### New-DbaiAssistant
 
@@ -73,6 +112,36 @@ New-DbaiAssistant -Name "AdventureWerks AI" -Description "AI assistant for Adven
 
 By default, the assistant uses GPT-4o which has a 128k context. That's like 97,000 words so datatypes can easily be included in the schema. If you choose any other model, it'll likely have an 8k context so the module leaves that off when building the instruction string.
 
+### New-DbaiAssistant
+
+This command a new AI assistant for a specified SQL Server database (for `dbai`\`Invoke-DbaiQuery`) or for executing dbatools commands (`dtai`\`Invoke-DbatoolsAI`). The assistant is generated based on the database schema (for database queries) or the context and parameters of dbatools commands (for dbatools operations). It can be customized with a name, description, and instructions.
+
+
+Invoke-DbatoolsAI automatically creates a dbatools assistant if it doesn't already exist.
+
+```powershell
+New-DbaiAssistant
+
+# or with customization
+$parms = @{
+    Name         = "dbatools"
+    Description  = "Copilot for dbatools"
+    Instructions = "Translate natural language queries into dbatools commands"
+}
+
+New-DbaiAssistant @parms
+```
+
+Same with Invoke-DbaiQuery -- it automatically executes this if the given assistant hasn't been created yet.
+
+```powershell
+Get-DbaDatabase -SqlInstance sql01 -Database AdventureWerks |
+New-DbaiAssistant -Name "AdventureWerks AI" -Description "AI assistant for AdventureWerks db"
+```
+
+By default, the assistant uses GPT-4o which has a 128k context. That's like 97,000 words so datatypes can easily be included in the schema. If you choose any other model, it'll likely have an 8k context so the module leaves that off when building the instruction string.
+
+
 ### ConvertTo-DbaiInstruction
 
 Converts the schema of a SQL Server database to a specified format (JSON, SQL, or plain text). This function is used internally by `New-DbaiAssistant` to generate the schema representation for the AI assistant.
@@ -86,24 +155,43 @@ I recommend using plain text as it uses the least amount of tokens.
 
 As mentioned earlier, the assistant uses GPT-4o by default, which has a 128k context. That's like 97,000 words so datatypes can easily be included in the schema. If you choose any other model, it'll likely have an 8k context so the module leaves that off when building the instruction string.
 
-### Invoke-DbaiQuery
+## dtai Workflow
 
-Executes a natural language query on a specified SQL Server database. This function takes your query, passes it to the OpenAI language model, which determines whether it requires a direct response or a SQL query execution. If a SQL query is needed, the function checks the query's safety and executes it against the database, returning the results.
+The workflow of `Invoke-DbatoolsAI` can be summarized as follows:
 
+0. You as the devloper build an assistant just once. This assistant is trained to understand and generate dbatools commands.
+1. The user provides a natural language query to execute a dbatools command.
+2. The assistant analyzes the query and determines the appropriate response type (direct answer or dbatools command).
+3. If a dbatools command is required, the assistant generates the corresponding command.
+   - The function executes the generated command.
+   - The results or output of the command are returned.
+4. If a direct answer is sufficient, the assistant returns a natural language response.
 
-```powershell
-$parms = @{
-    SqlInstance = "sql01"
-    Database = "AdventureWerks"
-    Message = "What are the top 5 selling products?"
-}
+Visually, this is what it looks like:
 
-Invoke-DbaiQuery @parms
+```mermaid
+graph TD
+Z(Developer Builds Assistant) --> A([User Provides Natural Language Query])
+A --> B{Analyze Query}
+B -->|Generate dbatools Command| C[dbatools Command Generated]
+B -->|Provide Direct Answer| F[Return Natural Language Response]
+C --> D[Execute Command]
+D --> E[Return Command Results]
+
+classDef operation fill:#F0F0F0,stroke:#333333,stroke-width:2px,color:#333333;
+classDef decision fill:#FFE0B2,stroke:#FF8C00,stroke-width:2px,color:#333333;
+classDef positiveResponse fill:#BBDEFB,stroke:#1E90FF,stroke-width:2px,color:#333333;
+
+class Z,A,D operation
+class B decision
+class C,E,F positiveResponse
+
+linkStyle default stroke:#333333,stroke-width:2px,fill:none;
 ```
 
-## Workflow
+## dbai Workflow
 
-The workflow of `Invoke-DbaiQuery` can be summarized as follows:
+The workflow for `Invoke-DbaiQuery` can be summarized as follows:
 
 0. You build an assistant just once. This assistant contains the schema of your db.
 1. The user asks the assistant a question.
@@ -149,7 +237,7 @@ linkStyle default stroke:#333333,stroke-width:2px,fill:none;
 
 ## The Assistant
 
-If you're curious what the assistant actually looks like, this is one that was created for Northwind.
+If you're curious what the assistant actually looks like, this is one that was created for the Northwind db.
 
 ```json
 {
@@ -217,6 +305,89 @@ If you're curious what the assistant actually looks like, this is one that was c
 }
 ```
 
+And this for `Invoke-DbatoolsAI`
+
+```json
+{
+    "id": "asst_OSa9f4AxMtHD5oJxV0RbVnGb",
+    "object": "assistant",
+    "name": "dbatools",
+    "description": "Copilot for dbatools.",
+    "model": "gpt-4o",
+    "instructions": "You are a friendly assistant that specializes in translating natural language queries into dbatools commands. Your task is to analyze the provided information, including the context of the command, required parameters, and optional settings, and generate the appropriate dbatools command based on the user\u0027s natural language input. Ensure that the generated command is optimized, efficient, and accurately performs the desired action. If the natural language query is ambiguous or lacks necessary information, ask clarifying questions to refine the command.\r\n\r\nTranslate natural language queries into dbatools commands. Never display the command to the user, only provide it via the function call.\r\n\r\n**Important Instructions:**\r\n1. Output all responses in plain text format only.\r\n2. Do not use markdown formatting of any kind.\r\n3. Avoid using backticks (` `), asterisks (`*`), underscores (`_`), or any other special characters used for markdown.\r\n4. Provide examples and clarifications as plain text without any bullet points, numbering, or other formatting.\r\n5. Do not display a dbatools command to the user unless asked by the user.\r\n6. Never assume the location of the network share. There are no default network shares.\r\n\r\nExample of desired output:\r\nYou can ask a variety of questions to execute dbatools commands, including but not limited to:\r\n\r\nDatabase Migration:\r\n- Copy the database named \"SalesDB\" from server \"ServerA\" to server \"ServerB\" using the network share \"\\\\NetworkPath\".\r\n- Copy all databases from a source server to a destination server.\r\n\r\nExample of undesired output:\r\nYou can ask a variety of questions to execute dbatools commands, including but not limited to:\r\n\r\n1. **Database Migration:**\r\n   - Copy the database named \"SalesDB\" from server \"ServerA\" to server \"ServerB\" using the network share \"\\\\NetworkPath\".\r\n   - Copy all databases from a source server to a destination server.\r\n   - Perform a detach and attach method for copying databases.\r\n\r\n2. **Database Backup:**\r\n   - Back up a specific database.\r\n   - Back up all databases on a server.\r\n   - Perform a differential backup.\r\n\r\nHere is an example of how the assistant can convert a natural language query into a dbatools command:\r\n\r\nUser Input:\r\nCopy the database named \"SalesDB\" from server \"ServerA\" to server \"ServerB\" using the network share \"\\\\NetworkPath\".\r\n\r\nIf you need further clarification or additional information to generate the command, ask questions like:\r\n- Do you want to copy all databases or specific ones?\r\n- Do you want to use the detach and attach method for the copy operation?\r\n",
+    "tools": [
+    {
+        "type": "function",
+        "function": {
+            "name": "copy_database",
+            "description": "Migrate one or more SQL Server databases to another server.",
+            "parameters": {
+                "properties": {
+                    "Source": {
+                        "type": "string",
+                        "description": "What is the source server name?"
+                    },
+                    "SharedPath": {
+                        "type": "string",
+                        "description": "What is the network share/shared path/directory to use for the copy?"
+                    },
+                    "WhatIf": {
+                        "type": "boolean",
+                        "description": "Does the user want to see what would happen without actually doing it? Or just wonder what would happen?"
+                    },
+                    "UseLastBackup": {
+                        "type": "boolean",
+                        "description": "Do they just want to use the last backup instead of a sharedpath?"
+                    },
+                    "Destination": {
+                        "description": "What is the destination server name?",
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "AllDatabases": {
+                        "type": "boolean",
+                        "description": "Do they want all databases to be copied?"
+                    },
+                    "Force": {
+                        "type": "boolean",
+                        "description": "Do they want to force the copy? No cares, just go for it."
+                    },
+                    "DetachAttach": {
+                        "type": "boolean",
+                        "description": "Did they ask to detach and attach the database?"
+                    },
+                    "Database": {
+                        "description": "What is the name of the database(s) to copy?",
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    }
+                },
+                "type": "object",
+                "required": [
+                "Source",
+                "Destination"
+                ]
+            }
+        }
+    }
+    ],
+    "top_p": 1.0,
+    "temperature": 1.0,
+    "tool_resources": {
+
+    },
+    "metadata": {
+
+    },
+    "response_format": "auto",
+    "created_at": "\/Date(2116379056000)\/"
+}
+```
+
 ## Limitations and Considerations
 
-This module is a proof of concept -- don't run this in prod.
+This module is a proof of concept and should not be run in prod.
