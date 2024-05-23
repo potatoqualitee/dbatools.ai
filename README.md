@@ -8,6 +8,8 @@ And it works surprisingly well! Check this out — I used the laziest language p
 
 ![dbatools.ai example output](dtai.example.png)
 
+![dbatools.ai example output](interactive.example.png)
+
 As a developer, you'll note that building a copilot is not 100% magic. The natural language part is magic, certainly, but it still requires a schema to be provided for database queries. The copilot/OpenAI doesn't magically go in and get that for you. To see how this works, scroll way down to see the workflow.
 
 ## Supported Platforms
@@ -98,6 +100,22 @@ Invoke-DbatoolsAI -Message "Copy the SalesDB database from ServerA to ServerB us
 
 dtai Copy the SalesDB database from ServerA to ServerB using the network share \\NetworkPath
 ```
+
+### Enter-DbaiDatabase
+
+Enters an interactive session to execute natural language queries on a specified SQL Server database. This function allows you to interactively enter queries and receive results without the need to repeatedly specify the database connection details.
+
+```powershell
+# Enter an interactive session for the Northwind database on localhost
+Enter-DbaiDatabase
+```
+
+```powershell
+# Enter an interactive session for the AdventureWorks database on a specific SQL Server instance
+Enter-DbaiDatabase -SqlInstance "SQLSERVER01" -Database "AdventureWorks" -SqlCredential awdbuser
+```
+
+Once inside the interactive session, you can enter natural language queries and press Enter twice to execute them. The corresponding SQL query will be generated and executed using the `Invoke-DbaiQuery` function.
 
 ### New-DbaiAssistant
 
