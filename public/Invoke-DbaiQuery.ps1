@@ -24,8 +24,8 @@ function Invoke-DbaiQuery {
     .PARAMETER As
     The output format of the result. Supported values are 'PSObject' and 'String'. Default is 'String'.
 
-    .PARAMETER Unsafe
-    Allows execution of potentially unsafe SQL queries.
+    .PARAMETER SkipSafetyCheck
+    Allows execution of potentially SkipSafetyCheck SQL queries.
 
     .EXAMPLE
     PS C:\> Invoke-DbaiQuery -Message "Get the top 10 customers by total sales amount" -Database AdventureWorks2019
@@ -43,7 +43,7 @@ function Invoke-DbaiQuery {
         [string]$AssistantName,
         [ValidateSet("PSObject", "String")]
         [string]$As = "String",
-        [switch]$Unsafe
+        [switch]$SkipSafetyCheck
     )
     begin {
         $PSDefaultParameterValues['Write-Progress:Activity'] = "Getting answer"
@@ -176,7 +176,7 @@ function Invoke-DbaiQuery {
                     if ($sql) {
                         Write-Verbose "SQL query: $sql"
 
-                        if (-not $Unsafe) {
+                        if (-not $SkipSafetyCheck) {
                             Write-Progress -Status "Checking SQL query validity" -PercentComplete ((5 / 10) * 100)
                             $output = Test-SqlQuery -SqlStatement $sql -Tools $assistant.tools
 
@@ -211,7 +211,7 @@ function Invoke-DbaiQuery {
                     if ($null -eq $result) {
                         $output = "No data returned."
                     } else {
-                        $output = $result | Out-String | ConvertTo-Json
+                        $output = $result | Out-String | ConvertTo-Json -Depth 10
                     }
 
                     $innerToolOutputs = @()
@@ -233,7 +233,7 @@ function Invoke-DbaiQuery {
 
                     Write-Progress -Status "Waiting for run to complete" -PercentComplete ((7 / 10) * 100)
                     $runcount = 0
-                    while ($null -eq $rundata.usage.completion_tokens -and $runcount -lt 45) {
+                    while (($null -eq $rundata.usage.completion_tokens -and $runcount -lt 45) -or $rundata.status -eq "in_progress") {
                         Start-Sleep -Milliseconds 300
                         $rundata = PSOpenAI\Get-ThreadRun -ThreadId $thread.id
                         $runcount++
@@ -255,7 +255,7 @@ function Invoke-DbaiQuery {
             Write-Progress -Status "Run completed, waiting for answer" -PercentComplete ((8 / 10) * 100)
 
             $runcount = 0
-            while ($null -eq $messages.content.text.value -and $runcount -lt 25) {
+            while (($null -eq $messages.content.text.value -and $runcount -lt 25) -or $rundata.status -eq "in_progress") {
                 Start-Sleep -Milliseconds 300
                 $messages = PSOpenAI\Get-ThreadMessage -ThreadId $thread.id |
                     Where-Object role -eq assistant |
@@ -264,7 +264,6 @@ function Invoke-DbaiQuery {
             }
 
             if ($runcount -ge 25) {
-
                 if ($rundata.status) {
                     throw "Run completed, but answer was not received in a reasonable amount of time. Failed with status $($rundata.status)"
                 } else {
