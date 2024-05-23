@@ -1,8 +1,8 @@
 # dbatools.ai: A Copilot for SQL Server Databases
 
-dbatools.ai is a PowerShell module that acts as a helpful assistant for SQL Server databases and dbatools operations. It lets developers and DBAs explore their databases using plain English commands and execute dbatools commands using natural language queries. This project is a proof of concept designed to show PowerShell and .NET developers how to create a database assistant and a dbatools copilot using OpenAI's advanced language models.
+dbatools.ai is a PowerShell module that acts as a helpful assistant for SQL Server databases and dbatools. It lets developers and DBAs explore their databases using plain English commands and execute dbatools commands using natural language queries. This project is a proof of concept designed to show PowerShell and .NET developers how to create a database assistant and a dbatools copilot using OpenAI models.
 
-It works so well, though. Check this out -- I used the laziest language possible and it still came through.
+And it works surprisingly well! Check this out — I used the laziest language possible and it still came through.
 
 ![dbatools.ai example output](copilot.example.png)
 
