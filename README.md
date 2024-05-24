@@ -112,7 +112,7 @@ Enter-DbaiDatabase
 
 ```powershell
 # Enter an interactive session for the AdventureWorks database on a specific SQL Server instance
-Enter-DbaiDatabase -SqlInstance "SQLSERVER01" -Database "AdventureWorks" -SqlCredential awdbuser
+Enter-DbaiDatabase -SqlInstance SQLSERVER01 -Database AdventureWorks -SqlCredential awdbuser
 ```
 
 Once inside the interactive session, you can enter natural language queries and press Enter twice to execute them. The corresponding SQL query will be generated and executed using the `Invoke-DbaiQuery` function.
