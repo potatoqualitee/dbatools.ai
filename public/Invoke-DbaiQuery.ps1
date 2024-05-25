@@ -65,7 +65,7 @@ function Invoke-DbaiQuery {
 
         if (-not $script:threadcache[$querykey]) {
             $cacheobject = [PSCustomObject]@{
-                thread    =  PSOpenAI\New-Thread
+                thread    = PSOpenAI\New-Thread
                 assistant = $null
             }
             $script:threadcache[$querykey] = $cacheobject
@@ -84,7 +84,6 @@ function Invoke-DbaiQuery {
         $PSDefaultParameterValues["*:SqlCredential"] = $SqlCredential
         $PSDefaultParameterValues["Get-DbaDatabase:Database"] = $Database
         $PSDefaultParameterValues["Invoke-DbaQuery:Database"] = $Database
-
     }
     process {
         # test for single word or single character messages
@@ -118,36 +117,10 @@ function Invoke-DbaiQuery {
             $PSDefaultParameterValues["*:RunId"] = $run.id
 
             Write-Progress -Status "Waiting for run to complete" -PercentComplete ((3 / 10) * 100)
-            $runcount = 0
-            while ($null -eq $rundata -and $runcount -lt 25) {
-                $rundata = PSOpenAI\Get-ThreadRun -ThreadId $thread.id
-                Start-Sleep -Milliseconds 300
-                $runcount++
-            }
-
-            if ($runcount -ge 25) {
-                if ($rundata.status) {
-                    throw "Run did not complete in a reasonable amount of time. Failed with status $($rundata.status)"
-                } else {
-                    throw "Run did not complete in a reasonable amount of time."
-                }
-            }
+            $rundata = PSOpenAI\Wait-ThreadRun -Run $run
 
             Write-Progress -Status "Current status: $($rundata.status)" -PercentComplete ((4 / 10) * 100)
-            $runcount = 0
-            while ($rundata.status -notin "requires_action", "completed" -and $runcount -lt 25) {
-                Start-Sleep -Milliseconds 300
-                $rundata = PSOpenAI\Get-ThreadRun -ThreadId $thread.id
-                $runcount++
-            }
-
-            if ($runcount -ge 25) {
-                if ($rundata.status) {
-                    throw "Run did not require action in a reasonable amount of time. Failed with status $($rundata.status)"
-                } else {
-                    throw "Run did not require action in a reasonable amount of time."
-                }
-            }
+            $rundata = PSOpenAI\Wait-ThreadRun -Run $rundata -StatusForWait @('queued', 'in_progress') -StatusForExit @('requires_action', 'completed')
 
             if ($rundata.status -eq "requires_action") {
                 $requiredAction = $rundata.required_action
@@ -232,20 +205,7 @@ function Invoke-DbaiQuery {
                     }
 
                     Write-Progress -Status "Waiting for run to complete" -PercentComplete ((7 / 10) * 100)
-                    $runcount = 0
-                    while (($null -eq $rundata.usage.completion_tokens -and $runcount -lt 45) -or $rundata.status -eq "in_progress") {
-                        Start-Sleep -Milliseconds 300
-                        $rundata = PSOpenAI\Get-ThreadRun -ThreadId $thread.id
-                        $runcount++
-                    }
-
-                    if ($runcount -ge 45) {
-                        throw "Run did not complete in a reasonable amount of time while waiting for completion. Status = $($rundata.status)"
-                    }
-
-                    Write-Verbose "Prompt tokens: $($rundata.usage.prompt_tokens)"
-                    Write-Verbose "Completion: $($rundata.usage.completion_tokens)"
-                    Write-Verbose "Total tokens: $($rundata.usage.total_tokens)"
+                    $rundata = PSOpenAI\Wait-ThreadRun -Run $rundata
                 } else {
                     Write-Error "Unsupported required action type: $($requiredAction.type)"
                     break
@@ -253,23 +213,8 @@ function Invoke-DbaiQuery {
             }
 
             Write-Progress -Status "Run completed, waiting for answer" -PercentComplete ((8 / 10) * 100)
-
-            $runcount = 0
-            while (($null -eq $messages.content.text.value -and $runcount -lt 25) -or $rundata.status -eq "in_progress") {
-                Start-Sleep -Milliseconds 300
-                $messages = PSOpenAI\Get-ThreadMessage -ThreadId $thread.id |
-                    Where-Object role -eq assistant |
-                    Select-Object -First 1
-                $runcount++
-            }
-
-            if ($runcount -ge 25) {
-                if ($rundata.status) {
-                    throw "Run completed, but answer was not received in a reasonable amount of time. Failed with status $($rundata.status)"
-                } else {
-                    throw "Run completed, but answer was not received in a reasonable amount of time."
-                }
-            }
+            $rundata = PSOpenAI\Wait-ThreadRun -Run $rundata
+            $messages = PSOpenAI\Get-ThreadMessage -ThreadId $thread.id | Where-Object role -eq assistant | Select-Object -First 1
 
             if ($As -eq "String") {
                 $messages.content.text.value
