@@ -1,5 +1,5 @@
 function Invoke-DbaiQuery {
-<#
+    <#
     .SYNOPSIS
     Executes a natural language query on a SQL Server database.
 
@@ -84,6 +84,7 @@ function Invoke-DbaiQuery {
         $PSDefaultParameterValues["*:SqlCredential"] = $SqlCredential
         $PSDefaultParameterValues["Get-DbaDatabase:Database"] = $Database
         $PSDefaultParameterValues["Invoke-DbaQuery:Database"] = $Database
+
     }
     process {
         # test for single word or single character messages
@@ -117,10 +118,11 @@ function Invoke-DbaiQuery {
             $PSDefaultParameterValues["*:RunId"] = $run.id
 
             Write-Progress -Status "Waiting for run to complete" -PercentComplete ((3 / 10) * 100)
-            $rundata = PSOpenAI\Wait-ThreadRun -Run $run
+            $rundata = Wait-ThreadRun -RunId $run.id -ThreadId $thread.id
 
-            Write-Progress -Status "Current status: $($rundata.status)" -PercentComplete ((4 / 10) * 100)
-            $rundata = PSOpenAI\Wait-ThreadRun -Run $rundata -StatusForWait @('queued', 'in_progress') -StatusForExit @('requires_action', 'completed')
+            if ($rundata.status -notin "requires_action", "completed") {
+                throw "Run did not complete in a reasonable amount of time. Status: $($rundata.status)"
+            }
 
             if ($rundata.status -eq "requires_action") {
                 $requiredAction = $rundata.required_action
@@ -205,7 +207,14 @@ function Invoke-DbaiQuery {
                     }
 
                     Write-Progress -Status "Waiting for run to complete" -PercentComplete ((7 / 10) * 100)
-                    $rundata = PSOpenAI\Wait-ThreadRun -Run $rundata
+                    $rundata = Wait-ThreadRun -RunId $run.id -ThreadId $thread.id
+                    if ($rundata.status -ne "completed") {
+                        throw "Run did not complete in a reasonable amount of time. Status: $($rundata.status)"
+                    }
+
+                    Write-Verbose "Prompt tokens: $($rundata.usage.prompt_tokens)"
+                    Write-Verbose "Completion: $($rundata.usage.completion_tokens)"
+                    Write-Verbose "Total tokens: $($rundata.usage.total_tokens)"
                 } else {
                     Write-Error "Unsupported required action type: $($requiredAction.type)"
                     break
@@ -213,8 +222,23 @@ function Invoke-DbaiQuery {
             }
 
             Write-Progress -Status "Run completed, waiting for answer" -PercentComplete ((8 / 10) * 100)
-            $rundata = PSOpenAI\Wait-ThreadRun -Run $rundata
-            $messages = PSOpenAI\Get-ThreadMessage -ThreadId $thread.id | Where-Object role -eq assistant | Select-Object -First 1
+
+            $runcount = 0
+            while (($null -eq $messages.content.text.value -and $rundata.status -eq "in_progress") -and $runcount -lt 25) {
+                Start-Sleep -Milliseconds 300
+                $messages = PSOpenAI\Get-ThreadMessage -ThreadId $thread.id |
+                    Where-Object role -eq assistant |
+                    Select-Object -First 1
+                $runcount++
+            }
+
+            if ($runcount -ge 25) {
+                if ($rundata.status) {
+                    throw "Run completed, but answer was not received in a reasonable amount of time. Status: $($rundata.status)"
+                } else {
+                    throw "Run completed, but answer was not received in a reasonable amount of time."
+                }
+            }
 
             if ($As -eq "String") {
                 $messages.content.text.value
