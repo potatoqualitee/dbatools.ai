@@ -226,31 +226,27 @@ Visually, this is what it looks like
 graph TD
 Z(Developer Builds Assistant) --> A([User Asks Assistant a Question])
 A --> D{Determine Response Type}
-D -->|Return SQL Query| E[SQL Query Returned]
+D -->|Get SQL Query| E[SQL Query Returned]
 E -->|Requires Further Action| F[Check SQL Query Safety]
-D -->|Direct Answer| G[Return Natural Language Response]
+D -->|Direct Answer| G[Get Natural Language Response]
 F -->|Safe| H[Execute SQL Query]
-H --> I[Send to API]
-I --> J[Check Completion Status]
-J -->|Requires Further Action| K[Handle Required Action]
-J -->|Completed| L[Return Data-Driven Natural Language Response]
-F -->|Unsafe| M[Reject Query]
-M --> N[Error Handling]
-K --> L
-
-classDef operation fill:#F0F0F0,stroke:#333333,stroke-width:2px,color:#333333;
-classDef decision fill:#FFE0B2,stroke:#FF8C00,stroke-width:2px,color:#333333;
-classDef final fill:#C8E6C9,stroke:#2E8B57,stroke-width:2px,color:#333333;
-classDef positiveResponse fill:#BBDEFB,stroke:#1E90FF,stroke-width:2px,color:#333333;
-classDef errorHandling fill:#FFCDD2,stroke:#B22222,stroke-width:2px,color:#333333;
-
+H --> I[Send Results to API]
+I --> J[Get Data-Driven Natural Language Response]
+F -->|Unsafe| K[Reject Query]
+K --> L[Error Handling]
+classDef operation fill:#E1F5FE,stroke:#01579B,stroke-width:2px;
+classDef decision fill:#FFE0B2,stroke:#EF6C00,stroke-width:2px;
+classDef final fill:#C8E6C9,stroke:#388E3C,stroke-width:2px;
+classDef positiveResponse fill:#A5D6A7,stroke:#2E7D32,stroke-width:2px;
+classDef errorHandling fill:#FFCDD2,stroke:#D32F2F,stroke-width:2px;
+classDef reject fill:#FFCDD2,stroke:#D32F2F,stroke-width:2px;
 class Z,A,H,I,J operation
-class D,F,K decision
-class E,G,L positiveResponse
-class M,N errorHandling
-
-linkStyle default stroke:#333333,stroke-width:2px,fill:none;
-
+class D,F decision
+class E,G positiveResponse
+class J positiveResponse
+class K reject
+class L errorHandling
+linkStyle default stroke:#333,stroke-width:2px,fill:none;
 ```
 
 ## The Assistant
