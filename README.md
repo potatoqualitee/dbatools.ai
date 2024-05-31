@@ -119,7 +119,7 @@ Once inside the interactive session, you can enter natural language queries and 
 
 ### New-DbaiAssistant
 
-This command a new AI assistant for a specified SQL Server database (for `dbai`\`Invoke-DbaiQuery`) or for executing dbatools commands (`dtai`\`Invoke-DbatoolsAI`). The assistant is generated based on the database schema (for database queries) or the context and parameters of dbatools commands (for dbatools operations). It can be customized with a name, description, and instructions.
+This command a new AI assistant for a specified SQL Server database (for `dbai\Invoke-DbaiQuery`) or for executing dbatools commands (`dtai\Invoke-DbatoolsAI`). The assistant is generated based on the database schema (for database queries) or the context and parameters of dbatools commands (for dbatools operations). It can be customized with a name, description, and instructions.
 
 Invoke-DbatoolsAI automatically creates a dbatools assistant if it doesn't already exist.
 
