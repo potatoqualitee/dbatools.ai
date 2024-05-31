@@ -119,21 +119,7 @@ Once inside the interactive session, you can enter natural language queries and 
 
 ### New-DbaiAssistant
 
-Creates a new AI assistant for a specified SQL Server database. The assistant is generated based on the database schema and can be customized with a name, description, and instructions.
-
-Invoke-DbaiQuery automatically executes this if the given assistant hasn't been created yet.
-
-```powershell
-Get-DbaDatabase -SqlInstance sql01 -Database AdventureWerks |
-New-DbaiAssistant -Name "AdventureWerks AI" -Description "AI assistant for AdventureWerks db"
-```
-
-By default, the assistant uses GPT-4o which has a 128k context. That's like 97,000 words so datatypes can easily be included in the schema. If you choose any other model, it'll likely have an 8k context so the module leaves that off when building the instruction string.
-
-### New-DbaiAssistant
-
 This command a new AI assistant for a specified SQL Server database (for `dbai`\`Invoke-DbaiQuery`) or for executing dbatools commands (`dtai`\`Invoke-DbatoolsAI`). The assistant is generated based on the database schema (for database queries) or the context and parameters of dbatools commands (for dbatools operations). It can be customized with a name, description, and instructions.
-
 
 Invoke-DbatoolsAI automatically creates a dbatools assistant if it doesn't already exist.
 
