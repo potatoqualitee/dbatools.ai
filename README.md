@@ -220,19 +220,22 @@ H --> I[Send Results to API]
 I --> J[Get Data-Driven Natural Language Response]
 F -->|Unsafe| K[Reject Query]
 K --> L[Error Handling]
-classDef operation fill:#E1F5FE,stroke:#01579B,stroke-width:2px;
-classDef decision fill:#FFE0B2,stroke:#EF6C00,stroke-width:2px;
-classDef final fill:#C8E6C9,stroke:#388E3C,stroke-width:2px;
-classDef positiveResponse fill:#A5D6A7,stroke:#2E7D32,stroke-width:2px;
-classDef errorHandling fill:#FFCDD2,stroke:#D32F2F,stroke-width:2px;
-classDef reject fill:#FFCDD2,stroke:#D32F2F,stroke-width:2px;
+
+classDef operation fill:#E1F5FE,stroke:#01579B,stroke-width:2px,color:#333;
+classDef decision fill:#FFE0B2,stroke:#EF6C00,stroke-width:2px,color:#333;
+classDef final fill:#C8E6C9,stroke:#388E3C,stroke-width:2px,color:#333;
+classDef positiveResponse fill:#A5D6A7,stroke:#2E7D32,stroke-width:2px,color:#333;
+classDef errorHandling fill:#FFCDD2,stroke:#D32F2F,stroke-width:2px,color:#333;
+classDef reject fill:#FFCDD2,stroke:#D32F2F,stroke-width:2px,color:#333;
+
 class Z,A,H,I,J operation
 class D,F decision
 class E,G positiveResponse
 class J positiveResponse
 class K reject
 class L errorHandling
-linkStyle default stroke:#333,stroke-width:2px,fill:none;
+
+linkStyle default stroke:#ffffff,stroke-width:2px,fill:none;
 ```
 
 ## The Assistant
