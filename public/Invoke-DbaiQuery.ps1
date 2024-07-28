@@ -107,7 +107,11 @@ function Invoke-DbaiQuery {
                 $assistant = PSOpenAI\Get-Assistant -All | Where-Object Name -eq $AssistantName | Select-Object -First 1
 
                 if (-not $assistant) {
-                    $assistant = Get-DbaDatabase | New-DbaiAssistant
+                    try {
+                    $assistant = Get-DbaDatabase -EnableException | New-DbaiAssistant -ErrorAction Stop
+                    } catch {
+                        throw $PSItem
+                    }
                 }
                 $script:threadcache[$querykey].assistant = $assistant
             }
