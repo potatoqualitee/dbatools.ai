@@ -111,9 +111,9 @@ Processes multiple PDF files, converting them to Markdown and then to structured
 
                 Write-Verbose "Outputting converted result"
                 $convertedResult
+
             } catch {
-                Write-Verbose "Failed to process content: $PSItem"
-                Write-Error "Failed to process content: $PSItem"
+                throw "Failed to process content: $PSItem"
             }
         }
     }

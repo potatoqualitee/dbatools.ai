@@ -123,6 +123,11 @@ function ConvertTo-DbaiMarkdown {
                     Content  = $response.SimpleContent.Content
                 }
 
+                Write-Verbose "Checking for failure"
+                if ($result.Content.StartsWith("Failure")) {
+                    throw $convertedResult.Content
+                }
+
                 Write-Verbose "Outputting result"
                 if ($Raw) {
                     $result.Content
