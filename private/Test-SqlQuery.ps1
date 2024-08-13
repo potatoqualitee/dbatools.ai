@@ -5,35 +5,36 @@ function Test-SqlQuery {
     )
 
     $body = @{
-        model = "gpt-4o-2024-08-06"
-        messages = @(
+        model           = "gpt-4o-2024-08-06"
+        messages        = @(
             @{
-                role = "system"
+                role    = "system"
                 content = "You are a helpful assistant and SQL expert."
             },
             @{
-                role = "user"
-                content = "Check the following SQL statement: $SqlStatement"
+                role    = "user"
+                content = "Translate the following natural language query into a SQL query: $query"
             }
         )
-        tools = $Tools
+        tools           = $Tools
         response_format = @{
-            type = "json_schema"
+            type        = "json_schema"
             json_schema = @{
-                type = "object"
+                type       = "object"
                 properties = @{
-                    valid = @{
+                    valid  = @{
                         type = "boolean"
                     }
                     issues = @{
-                        type = "array"
+                        type  = "array"
                         items = @{
                             type = "string"
                         }
                     }
                 }
-                required = @("valid", "issues")
+                required   = @("valid", "issues")
             }
+            strict      = $true
         }
     } | ConvertTo-Json -Compress -Depth 10
 

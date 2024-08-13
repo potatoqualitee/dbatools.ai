@@ -3,6 +3,7 @@ $script:dbSchema = @{}
 $script:foreignKeyCache = @{}
 $script:dbassist = {}
 $script:threadcache = @{}
+$script:ModuleRootLib = Join-Path -Path $script:ModuleRoot -Childpath lib
 function Import-ModuleFile {
     [CmdletBinding()]
     Param (

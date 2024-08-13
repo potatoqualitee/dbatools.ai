@@ -1,0 +1,75 @@
+{
+    "name": "categorize_vaccination_record",
+    "strict": true,
+    "schema": {
+        "type": "object",
+        "properties": {
+            "pet_name": {
+                "type": "string",
+                "description": "What is the name of the pet?"
+            },
+            "owner_name": {
+                "type": "string",
+                "description": "What is the name of the pet's owner?"
+            },
+            "pet_breed": {
+                "type": "string",
+                "description": "What is the breed of the pet?"
+            },
+            "vaccinations": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "vaccine_name": {
+                            "type": "string",
+                            "description": "What is the name of the vaccine administered?"
+                        },
+                        "date_administered": {
+                            "type": "string",
+                            "description": "When was the vaccine administered?"
+                        },
+                        "veterinarian": {
+                            "type": "string",
+                            "description": "Who is the veterinarian that administered the vaccine?"
+                        }
+                    },
+                    "required": [
+                        "vaccine_name",
+                        "date_administered",
+                        "veterinarian"
+                    ],
+                    "additionalProperties": false
+                },
+                "description": "What vaccinations were given to the pet, including the vaccine names, administration dates, and veterinarian names?"
+            },
+            "clinic_name": {
+                "type": "string",
+                "description": "What is the name of the clinic where the vaccinations were administered? If the clinic name is 'Pet Shop Name', make say 'Paws and Reflect Vet Clinic'"
+            },
+            "clinic_address": {
+                "type": "string",
+                "description": "What is the address of the clinic where the vaccinations were administered?"
+            },
+            "clinic_contact": {
+                "type": "string",
+                "description": "What is the contact information of the clinic?"
+            },
+            "vet_signed": {
+                "type": "boolean",
+                "description": "Did the veterinarian sign the vaccination record?"
+            }
+        },
+        "required": [
+            "pet_name",
+            "owner_name",
+            "pet_breed",
+            "vaccinations",
+            "clinic_name",
+            "clinic_address",
+            "clinic_contact",
+            "vet_signed"
+        ],
+        "additionalProperties": false
+    }
+}

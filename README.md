@@ -4,11 +4,11 @@ dbatools.ai is a PowerShell module that acts as a helpful assistant for SQL Serv
 
 And it works surprisingly well! Check this out — I used the laziest language possible and it still came through.
 
-![dbatools.ai example output](copilot.example.png)
+![dbatools.ai example output](lib/copilot.example.png)
 
-![dbatools.ai example output](dtai.example.png)
+![dbatools.ai example output](lib/dtai.example.png)
 
-![dbatools.ai example output](interactive.example.png)
+![dbatools.ai example output](lib/interactive.example.png)
 
 As a developer, you'll note that building a copilot is not 100% magic. The natural language part is magic, certainly, but it still requires a schema to be provided for database queries. The copilot/OpenAI doesn't magically go in and get that for you. To see how this works, scroll way down to see the workflow.
 
