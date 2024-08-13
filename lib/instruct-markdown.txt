@@ -30,5 +30,4 @@
 
 6. **IMPORTANT**
    - NO TRUNCATION: No shortcuts, no placeholders, no sampling
-   - Note if the vet has signed the document
    - Start all failure messages with FAILURE

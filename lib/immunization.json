@@ -67,10 +67,6 @@
             "clinic_contact": {
                 "type": "string",
                 "description": "What is the contact information of the clinic?"
-            },
-            "vet_signed": {
-                "type": "boolean",
-                "description": "Did the veterinarian sign the vaccination record?"
             }
         },
         "required": [
@@ -80,8 +76,7 @@
             "vaccinations",
             "clinic_name",
             "clinic_address",
-            "clinic_contact",
-            "vet_signed"
+            "clinic_contact"
         ],
         "additionalProperties": false
     }
