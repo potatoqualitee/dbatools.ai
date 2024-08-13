@@ -23,21 +23,34 @@
                     "properties": {
                         "vaccine_name": {
                             "type": "string",
-                            "description": "What is the name of the vaccine administered?"
+                            "description": "IMMUNIZATION DATES: what is the name of the vaccine administered?"
                         },
-                        "date_administered": {
-                            "type": "string",
-                            "description": "When was the vaccine administered?"
-                        },
-                        "veterinarian": {
-                            "type": "string",
-                            "description": "Who is the veterinarian that administered the vaccine?"
+                        "administration_records": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "date_administered": {
+                                        "type": "string",
+                                        "description": "IMMUNIZATION DATES: When was the vaccine administered?"
+                                    },
+                                    "veterinarian": {
+                                        "type": "string",
+                                        "description": "IMMUNIZATION DATES: Who is the veterinarian that administered the vaccine?"
+                                    }
+                                },
+                                "required": [
+                                    "date_administered",
+                                    "veterinarian"
+                                ],
+                                "additionalProperties": false
+                            },
+                            "description": "All administration records for this vaccine, including dates and veterinarians."
                         }
                     },
                     "required": [
                         "vaccine_name",
-                        "date_administered",
-                        "veterinarian"
+                        "administration_records"
                     ],
                     "additionalProperties": false
                 },

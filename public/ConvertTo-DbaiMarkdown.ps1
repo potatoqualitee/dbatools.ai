@@ -37,7 +37,7 @@ function ConvertTo-DbaiMarkdown {
     )
     begin {
         Write-Verbose "Starting ConvertTo-DbaiMarkdown function"
-        $PSDefaultParameterValues['Write-Progress:Activity'] = "Converting PDFs to Markdown"
+        $PSDefaultParameterValues['Write-Progress:Activity'] = "Converting file text to markdown"
 
         Write-Verbose "Creating AI Assistant"
         $assistantName = "TextExtractor"
@@ -79,7 +79,7 @@ function ConvertTo-DbaiMarkdown {
             try {
                 $filename = (Get-ChildItem -Path $filePath -ErrorAction Stop).Name
             } catch {
-                Write-Error "File not found: $filePath"
+                throw "File not found: $filePath"
                 continue
             }
             Write-Verbose "Processing file $processedFiles of $totalFiles -- $filePath"
@@ -135,7 +135,7 @@ function ConvertTo-DbaiMarkdown {
                     $result
                 }
             } catch {
-                Write-Error "Failed to process file $filePath | $PSItem"
+                throw "Failed to process file $filePath | $PSItem"
             } finally {
                 if ($file) {
                     Write-Verbose "Attempting to delete uploaded file: $($file.id)"

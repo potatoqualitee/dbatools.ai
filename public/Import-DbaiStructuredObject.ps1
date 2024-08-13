@@ -21,7 +21,6 @@ function Import-DbaiStructuredObject {
         [string]$SystemMessage = "Convert text to structured data."
     )
     begin {
-        $global:dbai = @{}
         $PSDefaultParameterValues['Write-Progress:Activity'] = "Importing Structured Objects"
 
         Write-Verbose "Establishing connection to SQL Server instance: $SqlInstance"
@@ -62,7 +61,6 @@ function Import-DbaiStructuredObject {
             throw "Invalid JSON schema: $PSItem"
         }
 
-        $tables = @{}
         Write-Verbose "Initialization complete"
     }
     process {
@@ -79,125 +77,99 @@ function Import-DbaiStructuredObject {
                 continue
             }
 
+            Write-Verbose "Converting file to markdown"
+            $content = ConvertTo-DbaiMarkdown -Path $file -Raw
+            $content | Write-Verbose
+
+            $splat = @{
+                Content       = $content
+                JsonSchema    = $JsonSchema
+                SystemMessage = $SystemMessage
+            }
+            Write-Verbose "Converting content to structured object"
+            $structuredData = ConvertTo-DbaiStructuredObject @splat
+            $structuredData | ConvertTo-Json -Depth 10 | Write-Verbose
             try {
-                Write-Verbose "Converting file to markdown"
-                $content = ConvertTo-DbaiMarkdown -Path $file -Raw
-                $global:dbai["content"] = $content
-
-                $splat = @{
-                    Content       = $content
-                    JsonSchema    = $JsonSchema
-                    SystemMessage = $SystemMessage
-                }
-                Write-Verbose "Converting content to structured object"
-                $structuredData = ConvertTo-DbaiStructuredObject @splat
-                $global:dbai["structuredData"] = $structuredData
-
                 foreach ($item in $structuredData) {
                     Write-Verbose "Processing structured data item"
-                    $flattenedData = @{}
-                    $arrayData = @{}
-
-                    # Flatten the object and separate array properties
-                    foreach ($prop in $item.PSObject.Properties) {
-                        if ($prop.Value -is [Array]) {
-                            $arrayData[$prop.Name] = $prop.Value
-                        } else {
-                            $flattenedData[$prop.Name] = $prop.Value
-                        }
-                    }
-
-                    # Handle the main table
                     $mainTableName = $schemaObject.name
                     Write-Verbose "Processing main table: $mainTableName"
-                    if (-not $tables.ContainsKey($mainTableName)) {
-                        Write-Verbose "Creating main table if not exists"
-                        $columns = $flattenedData.Keys | ForEach-Object { "[$PSItem] NVARCHAR(MAX)" }
-                        $createTableSql = "IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = '$mainTableName' AND schema_id = SCHEMA_ID('$Schema'))
-                                           CREATE TABLE $Schema.$mainTableName (Id INT IDENTITY(1,1) PRIMARY KEY, $($columns -join ', '))"
-                        Invoke-DbaQuery -SqlInstance $server -Database $Database -Query $createTableSql
-                        $tables[$mainTableName] = $true
-                        Write-Verbose "Main table created or verified"
-                    }
 
-                    # Insert main data and get the ID
-                    Write-Verbose "Inserting data into main table"
-                    $insertColumns = $flattenedData.Keys -join ', '
-                    $insertValues = $flattenedData.Values | ForEach-Object {
-                        if ($null -eq $_) { "NULL" } else { "'$($_ -replace "'", "''")'" }
+                    # Separate main object properties and array properties
+                    $mainObjectProperties = $item.PSObject.Properties | Where-Object { $_.Value -isnot [Array] }
+                    $arrayProperties = $item.PSObject.Properties | Where-Object { $_.Value -is [Array] }
+
+                    # Handle main object
+                    $columns = $mainObjectProperties | ForEach-Object { "[$($_.Name)] NVARCHAR(MAX)" }
+                    $createTableSql = "IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = '$mainTableName' AND schema_id = SCHEMA_ID('$Schema'))
+                                       CREATE TABLE $Schema.$mainTableName (Id INT IDENTITY(1,1) PRIMARY KEY, $($columns -join ', '))"
+                    Write-Verbose "Executing SQL: $createTableSql"
+                    Invoke-DbaQuery -SqlInstance $server -Database $Database -Query $createTableSql
+
+                    $insertColumns = $mainObjectProperties.Name -join ', '
+                    $insertValues = $mainObjectProperties | ForEach-Object {
+                        if ($null -eq $_.Value) { "NULL" } else { "'$($_.Value -replace "'", "''")'" }
                     }
                     $insertSql = "INSERT INTO $Schema.$mainTableName ($insertColumns) VALUES ($($insertValues -join ', ')); SELECT SCOPE_IDENTITY() AS Id"
+                    Write-Verbose "Executing SQL: $insertSql"
                     $mainId = (Invoke-DbaQuery -SqlInstance $server -Database $Database -Query $insertSql).Id
                     Write-Verbose "Data inserted into main table with ID: $mainId"
 
                     # Handle array properties
-                    foreach ($arrayProp in $arrayData.Keys) {
-                        $childTableName = "${mainTableName}_$arrayProp"
+                    foreach ($arrayProp in $arrayProperties) {
+                        $childTableName = "${mainTableName}_$($arrayProp.Name)"
                         Write-Verbose "Processing child table: $childTableName"
-                        if (-not $tables.ContainsKey($childTableName)) {
-                            Write-Verbose "Creating child table if not exists"
-                            $childColumns = $arrayData[$arrayProp][0].PSObject.Properties.Name |
-                                Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
-                                ForEach-Object {
-                                    $columnName = $_ -replace '[^a-zA-Z0-9_]', ''
-                                    if ([string]::IsNullOrWhiteSpace($columnName)) {
-                                        $columnName = "Column_$([Guid]::NewGuid().ToString('N'))"
-                                    }
-                                    "[$columnName] NVARCHAR(MAX)"
-                                }
 
-                            if ($childColumns.Count -eq 0) {
-                                Write-Warning "No valid columns found for child table: $childTableName"
-                                continue
-                            }
+                        $createChildTableSql = @"
+    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = '$childTableName' AND schema_id = SCHEMA_ID('$Schema'))
+    CREATE TABLE $Schema.$childTableName (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        ${mainTableName}Id INT,
+        [vaccine_name] NVARCHAR(MAX)
+    )
+"@
+                        Write-Verbose "Executing SQL: $createChildTableSql"
+                        Invoke-DbaQuery -SqlInstance $server -Database $Database -Query $createChildTableSql
 
-                            $createChildTableSql = "IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = '$childTableName' AND schema_id = SCHEMA_ID('$Schema'))
-                                                    CREATE TABLE $Schema.$childTableName (Id INT IDENTITY(1,1) PRIMARY KEY, ${mainTableName}Id INT, $($childColumns -join ', '))"
+                        $nestedTableName = "${childTableName}_administration_records"
+                        $createNestedTableSql = @"
+    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = '$nestedTableName' AND schema_id = SCHEMA_ID('$Schema'))
+    CREATE TABLE $Schema.$nestedTableName (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        ${childTableName}Id INT,
+        [date_administered] NVARCHAR(MAX),
+        [veterinarian] NVARCHAR(MAX)
+    )
+"@
+                        Write-Verbose "Executing SQL: $createNestedTableSql"
+                        Invoke-DbaQuery -SqlInstance $server -Database $Database -Query $createNestedTableSql
 
-                            try {
-                                Invoke-DbaQuery -SqlInstance $server -Database $Database -Query $createChildTableSql -ErrorAction Stop
-                                $tables[$childTableName] = $true
-                                Write-Verbose "Child table created or verified"
-                            } catch {
-                                Write-Error "Failed to create child table $childTableName | $PSItem"
-                                continue
-                            }
-                        }
+                        foreach ($childItem in $arrayProp.Value) {
+                            $insertChildSql = @"
+        INSERT INTO $Schema.$childTableName (${mainTableName}Id, [vaccine_name])
+        VALUES ($mainId, '$($childItem.vaccine_name)');
+        SELECT SCOPE_IDENTITY() AS Id
+"@
+                            Write-Verbose "Executing SQL: $insertChildSql"
+                            $childId = (Invoke-DbaQuery -SqlInstance $server -Database $Database -Query $insertChildSql).Id
+                            Write-Verbose "Data inserted into child table with ID: $childId"
 
-                        Write-Verbose "Inserting data into child table"
-                        foreach ($childItem in $arrayData[$arrayProp]) {
-                            $validColumns = $childItem.PSObject.Properties.Name |
-                                Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
-                                ForEach-Object { $_ -replace '[^a-zA-Z0-9_]', '' }
-
-                            if ($validColumns.Count -eq 0) {
-                                Write-Warning "No valid columns found for child item in table: $childTableName"
-                                continue
-                            }
-
-                            $childColumns = $validColumns -join ', '
-                            $childValues = $validColumns | ForEach-Object {
-                                $value = $childItem.$_
-                                if ($null -eq $value) {
-                                    "NULL"
-                                } else {
-                                    "'$($value -replace "'", "''")'"
-                                }
-                            }
-                            $insertChildSql = "INSERT INTO $Schema.$childTableName (${mainTableName}Id, $childColumns) VALUES ($mainId, $($childValues -join ', '))"
-
-                            try {
-                                Invoke-DbaQuery -SqlInstance $server -Database $Database -Query $insertChildSql -ErrorAction Stop
-                                Write-Verbose "Data inserted into child table"
-                            } catch {
-                                Write-Error "Failed to insert data into child table $childTableName | $PSItem"
+                            foreach ($adminRecord in $childItem.administration_records) {
+                                $insertNestedSql = @"
+            INSERT INTO $Schema.$nestedTableName (${childTableName}Id, [date_administered], [veterinarian])
+            VALUES ($childId, '$($adminRecord.date_administered)', '$($adminRecord.veterinarian)');
+            SELECT SCOPE_IDENTITY() AS Id
+"@
+                                Write-Verbose "Executing SQL: $insertNestedSql"
+                                $nestedId = (Invoke-DbaQuery -SqlInstance $server -Database $Database -Query $insertNestedSql).Id
+                                Write-Verbose "Data inserted into nested table with ID: $nestedId"
                             }
                         }
                     }
                 }
                 Write-Verbose "File processing complete: $file"
             } catch {
-                Write-Error "Error processing file $file | $PSItem"
+                throw "Error processing file $file | $PSItem"
             }
         }
     }
