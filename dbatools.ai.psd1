@@ -34,6 +34,7 @@
     FunctionsToExport = @(
         'ConvertTo-DbaiInstruction',
         'ConvertTo-DbaiMarkdown',
+        'ConvertTo-DbaiStructuredObject',
         'Enter-DbaiDatabase',
         'Import-DbaiStructuredObject',
         'Invoke-DbatoolsAI',

@@ -23,9 +23,9 @@ function ConvertTo-DbaiMarkdown {
     Converts all PDF files in the specified directory to Markdown format.
 
     .EXAMPLE
-    PS C:\> ConvertTo-DbaiMarkdown -Path C:\Documents\file.pdf -Raw
+    PS C:\> ConvertTo-DbaiMarkdown -Path C:\Documents\file.jpg -Raw
 
-    Converts the specified PDF file to Markdown format and outputs only the content.
+    Converts text in the specified jpg file to Markdown format and outputs only the content.
 
     #>
     [CmdletBinding()]
@@ -36,9 +36,10 @@ function ConvertTo-DbaiMarkdown {
         [switch]$Raw
     )
     begin {
+        Write-Verbose "Starting ConvertTo-DbaiMarkdown function"
         $PSDefaultParameterValues['Write-Progress:Activity'] = "Converting PDFs to Markdown"
 
-        # Create the AI Assistant
+        Write-Verbose "Creating AI Assistant"
         $assistantName = "TextExtractor"
         $instructionsfile = Join-Path -Path $script:ModuleRootLib -Childpath instruct-markdown.txt
         $assistantInstructions = Get-Content $instructionsfile -Raw
@@ -51,82 +52,92 @@ function ConvertTo-DbaiMarkdown {
                 UseCodeInterpreter = $true
             }
             $assistant = New-Assistant @splat
-        }
-        catch {
+            Write-Verbose "AI Assistant created successfully with ID: $($assistant.id)"
+        } catch {
+            Write-Verbose "Failed to create AI Assistant: $PSItem"
             throw "Failed to create AI Assistant: $PSItem"
         }
 
-        # Create a Thread
+        Write-Verbose "Creating Thread"
         try {
             $thread = New-Thread
-        }
-        catch {
+            Write-Verbose "Thread created successfully with ID: $($thread.id)"
+        } catch {
+            Write-Verbose "Failed to create Thread: $PSItem"
             throw "Failed to create Thread: $PSItem"
         }
 
         $totalFiles = 0
         $processedFiles = 0
     }
-
     process {
         $totalFiles += $Path.Count
+        Write-Verbose "Total files to process: $totalFiles"
 
         foreach ($filePath in $Path) {
             $processedFiles++
+            try {
+                $filename = (Get-ChildItem -Path $filePath -ErrorAction Stop).Name
+            } catch {
+                Write-Error "File not found: $filePath"
+                continue
+            }
+            Write-Verbose "Processing file $processedFiles of $totalFiles -- $filePath"
             Write-Progress -Status "Processing file $processedFiles of $totalFiles" -PercentComplete (($processedFiles / $totalFiles) * 100)
 
             try {
-                # Upload the PDF
+                Write-Verbose "Uploading file: $filePath"
                 $file = Add-OpenAIFile -File $filePath -Purpose assistants
+                Write-Verbose "File uploaded successfully with ID: $($file.id)"
 
-                # Wait for file processing to complete
+                Write-Verbose "Waiting for file processing to complete"
                 do {
                     $fileStatus = Get-OpenAIFile -FileId $file.id
+                    Write-Verbose "Current file status: $($fileStatus.status)"
                     if ($fileStatus.status -eq 'processed') {
+                        Write-Verbose "File processing completed"
                         break
-                    }
-                    elseif ($fileStatus.status -in 'failed', 'cancelled') {
+                    } elseif ($fileStatus.status -in 'failed', 'cancelled') {
                         throw "File processing $($fileStatus.status)"
                     }
                     Start-Sleep -Seconds 3
                 } while ($true)
 
-                # Add a Message to the Thread and Reference the Uploaded File
+                Write-Verbose "Adding message to thread"
                 $splat = @{
                     ThreadId                  = $thread.id
-                    Message                   = "Please extract the text from the uploaded file."
+                    Message                   = "Filename: $filename"
                     FileIdsForCodeInterpreter = $file.id
                 }
                 $null = Add-ThreadMessage @splat
 
-                # Start a Run to Invoke the Assistant
+                Write-Verbose "Starting thread run"
                 $run = Start-ThreadRun -ThreadId $thread.id -Assistant $assistant.id | Wait-ThreadRun
+                Write-Verbose "Thread run completed with status: $($run.status)"
 
-                # Process the Run Response
+                Write-Verbose "Processing run response"
                 $response = Get-ThreadMessage -ThreadId $thread.id -RunId $run.id | Select-Object -Last 1
 
                 $result = [PSCustomObject]@{
-                    FileName = [System.IO.Path]::GetFileNameWithoutExtension($filePath)
+                    FileName = $filename
                     Content  = $response.SimpleContent.Content
                 }
 
+                Write-Verbose "Outputting result"
                 if ($Raw) {
                     $result.Content
-                }
-                else {
+                } else {
                     $result
                 }
-            }
-            catch {
-                Write-Error "Failed to process file $filePath : $PSItem"
-            }
-            finally {
-                # Delete the uploaded file
+            } catch {
+                Write-Error "Failed to process file $filePath | $PSItem"
+            } finally {
                 if ($file) {
+                    Write-Verbose "Attempting to delete uploaded file: $($file.id)"
                     try {
                         $null = Remove-OpenAIFile -FileId $file.id
-                    }
-                    catch {
+                        Write-Verbose "File deleted successfully"
+                    } catch {
                         Write-Warning "Failed to delete uploaded file: $PSItem"
                     }
                 }
@@ -134,13 +145,15 @@ function ConvertTo-DbaiMarkdown {
         }
     }
     end {
-        # Clean up
+        Write-Verbose "Cleaning up resources"
         try {
             $null = Remove-Thread -ThreadId $thread.id
+            Write-Verbose "Thread removed successfully"
             $null = Remove-Assistant -AssistantId $assistant.id
-        }
-        catch {
+            Write-Verbose "Assistant removed successfully"
+        } catch {
             Write-Warning "Failed to clean up resources: $PSItem"
         }
+        Write-Verbose "ConvertTo-DbaiMarkdown function completed"
     }
 }

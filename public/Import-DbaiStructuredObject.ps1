@@ -21,6 +21,7 @@ function Import-DbaiStructuredObject {
         [string]$SystemMessage = "Convert text to structured data."
     )
     begin {
+        $global:dbai = @{}
         $PSDefaultParameterValues['Write-Progress:Activity'] = "Importing Structured Objects"
 
         Write-Verbose "Establishing connection to SQL Server instance: $SqlInstance"
@@ -33,28 +34,24 @@ function Import-DbaiStructuredObject {
             $server = Connect-DbaInstance @splat
             Write-Verbose "Successfully connected to $SqlInstance"
         } catch {
-            Write-Error "Error occurred while establishing connection to $SqlInstance | $PSItem"
-            return
+            throw "Error occurred while establishing connection to $SqlInstance | $PSItem"
         }
 
         if (-not $JsonSchema) {
             Write-Verbose "Reading JSON schema from: $JsonSchemaPath"
             if (-not (Test-Path -Path $JsonSchemaPath)) {
-                Write-Error "JSON schema file not found at path: $JsonSchemaPath"
-                return
+                throw "JSON schema file not found at path: $JsonSchemaPath"
             }
             try {
                 $JsonSchema = Get-Content -Path $JsonSchemaPath -Raw
                 Write-Verbose "Successfully read JSON schema"
             } catch {
-                Write-Error "Failed to read JSON schema file: $PSItem"
-                return
+                throw "Failed to read JSON schema file: $PSItem"
             }
         }
 
         if (-not $JsonSchema) {
-            Write-Error "Either JsonSchemaPath or JsonSchema must be provided."
-            return
+            throw "Either JsonSchemaPath or JsonSchema must be provided."
         }
 
         Write-Verbose "Parsing JSON schema"
@@ -62,8 +59,7 @@ function Import-DbaiStructuredObject {
             $schemaObject = $JsonSchema | ConvertFrom-Json -ErrorAction Stop
             Write-Verbose "Successfully parsed JSON schema"
         } catch {
-            Write-Error "Invalid JSON schema: $PSItem"
-            return
+            throw "Invalid JSON schema: $PSItem"
         }
 
         $tables = @{}
@@ -86,6 +82,8 @@ function Import-DbaiStructuredObject {
             try {
                 Write-Verbose "Converting file to markdown"
                 $content = ConvertTo-DbaiMarkdown -Path $file -Raw
+                $global:dbai["content"] = $content
+
                 $splat = @{
                     Content       = $content
                     JsonSchema    = $JsonSchema
@@ -93,6 +91,7 @@ function Import-DbaiStructuredObject {
                 }
                 Write-Verbose "Converting content to structured object"
                 $structuredData = ConvertTo-DbaiStructuredObject @splat
+                $global:dbai["structuredData"] = $structuredData
 
                 foreach ($item in $structuredData) {
                     Write-Verbose "Processing structured data item"
