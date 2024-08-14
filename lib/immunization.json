@@ -1,5 +1,5 @@
 {
-    "name": "categorize_vaccination_record",
+    "name": "pet",
     "strict": true,
     "schema": {
         "type": "object",
@@ -23,60 +23,42 @@
                     "properties": {
                         "vaccine_name": {
                             "type": "string",
-                            "description": "IMMUNIZATION DATES: what is the name of the vaccine administered?"
+                            "description": "What is the name of the vaccine administered?"
                         },
-                        "administration_records": {
-                            "type": "array",
-                            "items": {
-                                "type": "object",
-                                "properties": {
-                                    "date_administered": {
-                                        "type": "string",
-                                        "description": "IMMUNIZATION DATES: When was the vaccine administered?"
-                                    },
-                                    "veterinarian": {
-                                        "type": "string",
-                                        "description": "IMMUNIZATION DATES: Who is the veterinarian that administered the vaccine?"
-                                    }
-                                },
-                                "required": [
-                                    "date_administered",
-                                    "veterinarian"
-                                ],
-                                "additionalProperties": false
-                            },
-                            "description": "All administration records for this vaccine, including dates and veterinarians."
+                        "date_administered_1": {
+                            "type": "string",
+                            "description": "When was the first dose of the vaccine administered?"
+                        },
+                        "date_administered_2": {
+                            "type": "string",
+                            "description": "When was the second dose of the vaccine administered?"
+                        },
+                        "date_administered_3": {
+                            "type": "string",
+                            "description": "When was the third dose of the vaccine administered?"
+                        },
+                        "veterinarian": {
+                            "type": "string",
+                            "description": "Who is the veterinarian that administered the first dose?"
                         }
                     },
                     "required": [
                         "vaccine_name",
-                        "administration_records"
+                        "date_administered_1",
+                        "date_administered_2",
+                        "date_administered_3",
+                        "veterinarian"
                     ],
                     "additionalProperties": false
                 },
                 "description": "What vaccinations were given to the pet, including the vaccine names, administration dates, and veterinarian names?"
-            },
-            "clinic_name": {
-                "type": "string",
-                "description": "What is the name of the clinic where the vaccinations were administered? If the clinic name is 'Pet Shop Name', make say 'Paws and Reflect Vet Clinic'"
-            },
-            "clinic_address": {
-                "type": "string",
-                "description": "What is the address of the clinic where the vaccinations were administered?"
-            },
-            "clinic_contact": {
-                "type": "string",
-                "description": "What is the contact information of the clinic?"
             }
         },
         "required": [
             "pet_name",
             "owner_name",
             "pet_breed",
-            "vaccinations",
-            "clinic_name",
-            "clinic_address",
-            "clinic_contact"
+            "vaccinations"
         ],
         "additionalProperties": false
     }

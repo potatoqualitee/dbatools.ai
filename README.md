@@ -1,6 +1,6 @@
-# dbatools.ai: A Copilot for SQL Server Databases
+# dbatools.ai: A Copilot for SQL Server Databases and dbatools
 
-dbatools.ai is a PowerShell module that acts as a helpful assistant for SQL Server databases and dbatools. It lets developers and DBAs explore their databases using plain English commands and execute dbatools commands using natural language queries. This project is a proof of concept designed to show PowerShell and .NET developers how to create a database assistant and a dbatools copilot using OpenAI models.
+dbatools.ai is a PowerShell module that acts as a helpful assistant for SQL Server databases and dbatools. It lets developers and DBAs explore their databases using plain English commands, convert files to structured data for SQL Server import, and execute dbatools commands using natural language queries. This project is designed to show PowerShell and .NET developers how to create a database assistant and a dbatools copilot using OpenAI models.
 
 And it works surprisingly well! Check this out — I used the laziest language possible and it still came through.
 
@@ -10,7 +10,15 @@ And it works surprisingly well! Check this out — I used the laziest language p
 
 ![dbatools.ai example output](lib/interactive.example.png)
 
-As a developer, you'll note that building a copilot is not 100% magic. The natural language part is magic, certainly, but it still requires a schema to be provided for database queries. The copilot/OpenAI doesn't magically go in and get that for you. To see how this works, scroll way down to see the workflow.
+## Features
+
+- Interactive querying of SQL Server databases using natural language
+- Conversion of various file types (PDFs, images, Word docs) to structured data for SQL Server import
+- Execution of dbatools commands using natural language queries
+- Customizable AI assistants for specific databases or dbatools operations
+- Progress tracking and feedback during file processing and data import
+- Conversion of various file types to Markdown format
+- Extraction of structured data from text based on JSON schemas
 
 ## Supported Platforms
 + Windows PowerShell 5.1
@@ -62,7 +70,7 @@ Invoke-DbaiQuery @parms
 
 ## Usage
 
-dbatools.ai provides several functions to interact with your SQL Server databases:
+dbatools.ai provides several functions to interact with your SQL Server databases and files:
 
 ### Invoke-DbaiQuery
 
@@ -158,6 +166,54 @@ Get-DbaDatabase -SqlInstance sql01 -Database AdventureWerks | ConvertTo-DbaiInst
 I recommend using plain text as it uses the least amount of tokens.
 
 As mentioned earlier, the assistant uses GPT-4o by default, which has a 128k context. That's like 97,000 words so datatypes can easily be included in the schema. If you choose any other model, it'll likely have an 8k context so the module leaves that off when building the instruction string.
+
+
+### Import-DbaiFile
+
+Imports structured data from files into a SQL Server database and provides progress feedback. This function processes files (typically PDFs but could be images or Word docs), converts them to structured data based on a provided JSON schema, and imports the data into SQL Server tables. It handles nested data structures, supports batch processing of multiple files, and provides progress feedback using Write-Progress.
+
+```powershell
+# use defaults to import data from the included 'immunization.pdf' file
+Import-DbaiFile
+```
+
+```powershell
+$params = @{
+    Path           = "C:\Logs\ServerLogs.txt"
+    JsonSchemaPath = "C:\Schemas\server_log_schema.json"
+    SqlInstance    = "SQLMON01"
+    Database       = "LogAnalysis"
+    Schema         = "monitor"
+    SystemMessage  = "Extract server log entries with timestamps, severity, and messages"
+}
+Import-DbaiFile @params
+```
+
+### ConvertTo-DbaiMarkdown
+
+Converts various files to Markdown format using AI assistance. This function processes multiple file types (PDF, Word) and converts them to Markdown format. It supports processing multiple files through pipeline input and can check for required content in the output.
+
+```powershell
+ConvertTo-DbaiMarkdown -Path C:\Documents\file.pdf
+```
+
+```powershell
+Get-ChildItem -Path C:\Documents -Filter *.pdf | ConvertTo-DbaiMarkdown
+```
+
+### ConvertTo-DbaiStructuredObject
+
+Converts Markdown content to structured objects based on a JSON schema. This function takes Markdown content and a JSON schema, and uses AI to extract structured information based on the schema.
+
+```powershell
+$content = ConvertTo-DbaiMarkdown -Path C:\Documents\vaccine_record.pdf -Raw
+$splat = @{
+    Content         = $content
+    JsonSchemaPath  = "C:\Schemas\immunization.json"
+    SystemMessage   = "You are an assistant that extracts information from pet vaccination records."
+}
+ConvertTo-DbaiStructuredObject @splat
+```
 
 ## dtai Workflow
 

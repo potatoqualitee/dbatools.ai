@@ -1,10 +1,10 @@
 function Import-DbaiFile {
-<#
+    <#
     .SYNOPSIS
-    Imports structured data from files into a SQL Server database.
+    Imports structured data from files into a SQL Server database and provides progress feedback.
 
     .DESCRIPTION
-    The Import-DbaiFile function processes files (typically PDFs), converts them to structured data based on a provided JSON schema, and imports the data into SQL Server tables. It handles nested data structures and supports batch processing of multiple files.
+    The Import-DbaiFile function processes files (typically PDFs but could be images or Word docs), converts them to structured data based on a provided JSON schema, and imports the data into SQL Server tables. It handles nested data structures, supports batch processing of multiple files, and provides progress feedback using Write-Progress.
 
     .PARAMETER Path
     Specifies the path(s) to the file(s) to be imported. Defaults to an 'immunization.pdf' file in the module's lib directory.
@@ -22,26 +22,55 @@ function Import-DbaiFile {
     Specifies the credentials for SQL Server authentication.
 
     .PARAMETER Database
-    Specifies the target database name. Defaults to "Northwind".
+    Specifies the target database name. Defaults to "tempdb".
 
     .PARAMETER Schema
     Specifies the database schema to use. Defaults to "dbo".
 
-    .PARAMETER BatchSize
-    Specifies the number of records to process in each batch. Defaults to 50000.
-
     .PARAMETER SystemMessage
     Specifies a system message for data conversion. Defaults to "Convert text to structured data."
 
-    .EXAMPLE
-    PS C:\> Import-DbaiFile -Path "C:\Data\immunization.pdf" -SqlInstance sql01 -Database HealthDB
-
-    This example imports data from the specified PDF file into the HealthDB database on sql01.
+    .PARAMETER RequiredText
+    An array of strings that must be present in the output. If any of these strings are missing, the function will request the AI to try again.
 
     .EXAMPLE
-    PS C:\> Get-ChildItem "C:\Data\*.pdf" | Import-DbaiFile -SqlInstance sql01 -Database HealthDB
+    PS C:\> Import-DbaiFile
 
-    This example imports data from all PDF files in the C:\Data directory into the HealthDB database on sql01.
+    This example uses all default values. It imports data from the included 'immunization.pdf' file in the module's lib directory into the 'tempdb' database on the local SQL Server instance. It uses the default 'immunization.json' schema file, also located in the lib directory, to structure the data. The data is imported into the 'dbo' schema in SQL Server.
+
+    .EXAMPLE
+    PS C:\> $params = @{
+        Path           = "C:\Logs\ServerLogs.txt"
+        JsonSchemaPath = "C:\Schemas\server_log_schema.json"
+        SqlInstance    = "SQLMON01"
+        Database       = "LogAnalysis"
+        Schema         = "monitor"
+        SystemMessage  = "Extract server log entries with timestamps, severity, and messages"
+    }
+    PS C:\> Import-DbaiFile @params
+
+    This example processes a server log file. It uses a custom JSON schema to structure the log data, then imports it into the LogAnalysis database on the SQLMON01 instance. The data is stored in the 'monitor' schema.
+
+    This setup allows IT pros to easily import various log files into SQL Server for centralized analysis. The custom schema ensures that the log data is correctly structured, while the SystemMessage parameter guides the AI in extracting relevant information from the logs.
+
+    .EXAMPLE
+    PS C:\> $params = @{
+        Path           = "C:\DevDocs\APISpecification.md"
+        JsonSchemaPath = "C:\Schemas\api_spec_schema.json"
+        SqlInstance    = "DEVDB01"
+        Database       = "API_Documentation"
+        Schema         = "dev"
+        SystemMessage  = "Extract API endpoints, parameters, and response structures"
+        RequiredText   = @("Endpoint", "Method", "Parameters", "Response")
+    }
+    PS C:\> Import-DbaiFile @params
+
+    This example extracts API specifications from a Markdown file. It uses a custom schema to structure the API data, then imports it into the API_Documentation database on the DEVDB01 instance. The data is stored in the 'dev' schema.
+
+    This approach allows developers to maintain API docs in Markdown and automatically sync them to a queryable database. They can then easily generate reports, track changes over time, or even auto-generate client libraries based on the structured API data in SQL Server.
+
+    The RequiredText parameter ensures that key elements of the API spec are present in the extracted data.
+
 #>
     [CmdletBinding()]
     param (
@@ -56,169 +85,195 @@ function Import-DbaiFile {
         [Parameter(ValueFromPipelineByPropertyName)]
         [PSCredential]$SqlCredential,
         [Parameter(ValueFromPipelineByPropertyName)]
-        [string]$Database = "Northwind",
+        [string]$Database = "tempdb",
         [Parameter(ValueFromPipelineByPropertyName)]
         [string]$Schema = "dbo",
         [Parameter(ValueFromPipelineByPropertyName)]
-        [int]$BatchSize = 50000,
+        [string]$SystemMessage = "Convert text to structured data.",
         [Parameter(ValueFromPipelineByPropertyName)]
-        [string]$SystemMessage = "Convert text to structured data."
+        [string[]]$RequiredText
     )
     begin {
-        $PSDefaultParameterValues['Write-Progress:Activity'] = "Importing Structured Objects"
+        $PSDefaultParameterValues["*-Dba*:SqlInstance"] = $SqlInstance
+        $PSDefaultParameterValues["*-Dba*:SqlCredential"] = $SqlCredential
+        $PSDefaultParameterValues["*-Dba*:Database"] = $Database
 
-        Write-Verbose "Establishing connection to SQL Server instance: $SqlInstance"
         try {
-            $splat = @{
-                SqlInstance   = $SqlInstance
-                SqlCredential = $SqlCredential
-                Database      = $Database
-            }
-            $server = Connect-DbaInstance @splat
+            $null = Connect-DbaInstance
             Write-Verbose "Successfully connected to $SqlInstance"
         } catch {
             throw "Error occurred while establishing connection to $SqlInstance | $PSItem"
         }
 
-        if (-not $JsonSchema) {
-            Write-Verbose "Reading JSON schema from: $JsonSchemaPath"
+        if ($JsonSchemaPath -and -not $JsonSchema) {
             if (-not (Test-Path -Path $JsonSchemaPath)) {
                 throw "JSON schema file not found at path: $JsonSchemaPath"
             }
             try {
                 $JsonSchema = Get-Content -Path $JsonSchemaPath -Raw
-                Write-Verbose "Successfully read JSON schema"
             } catch {
                 throw "Failed to read JSON schema file: $PSItem"
             }
         }
 
-        if (-not $JsonSchema) {
-            throw "Either JsonSchemaPath or JsonSchema must be provided."
-        }
-
-        Write-Verbose "Parsing JSON schema"
         try {
             $schemaObject = $JsonSchema | ConvertFrom-Json -ErrorAction Stop
-            Write-Verbose "Successfully parsed JSON schema"
         } catch {
             throw "Invalid JSON schema: $PSItem"
         }
 
-        Write-Verbose "Initialization complete"
+        $filesToProcess = @()
     }
     process {
-        $totalFiles = $Path.Count
-        $processedFiles = 0
+        # if path matches immunization.pdf and the schema is not immunization.json then throw
+        # say cant use the default schema with a different file
+        if ("$Path" -match "immunization.pdf" -and "$JsonSchemaPath" -notmatch "immunization.json") {
+            Write-Warning "Invalid schema for immunization.pdf. Please provide immunization.json schema."
+            continue
+        }
+        # same for jsonschema back to path
+        if ("$JsonSchemaPath" -match "immunization.json" -and "$Path" -notmatch "immunization.pdf") {
+            Write-Warning "Invalid file for immunization.json schema. Please provide immunization.pdf file."
+            continue
+        }
+        $filesToProcess += $Path
+    }
+    end {
+        $fileCounter = 0
+        $totalFiles = $filesToProcess.Count
+        foreach ($file in $filesToProcess) {
+            $fileCounter++
+            Write-Progress -Activity "Processing files" -Status "File $fileCounter of $totalFiles" -PercentComplete (($fileCounter / $totalFiles) * 100)
 
-        foreach ($file in $Path) {
-            $processedFiles++
-            Write-Progress -Status "Processing file $processedFiles of $totalFiles" -PercentComplete (($processedFiles / $totalFiles) * 100)
-
-            Write-Verbose "Processing file: $file"
             if (-not (Test-Path -Path $file)) {
                 Write-Warning "File not found: $file"
                 continue
             }
 
-            Write-Verbose "Converting file to markdown"
-            $content = ConvertTo-DbaiMarkdown -Path $file -Raw
-            $content | Write-Verbose
+            Write-Progress -Activity "Processing file: $file" -Status "Reading file content" -PercentComplete 0
 
-            $splat = @{
-                Content       = $content
-                JsonSchema    = $JsonSchema
-                SystemMessage = $SystemMessage
-            }
-            Write-Verbose "Converting content to structured object"
-            $structuredData = ConvertTo-DbaiStructuredObject @splat
-            $structuredData | ConvertTo-Json -Depth 10 | Write-Verbose
             try {
-                foreach ($item in $structuredData) {
-                    Write-Verbose "Processing structured data item"
-                    $mainTableName = $schemaObject.name
-                    Write-Verbose "Processing main table: $mainTableName"
+                if ($file -match '\.xml|\.md|\.txt|\.json') {
+                    $content = Get-Content -Path $file -Raw
+                } else {
+                    $content = ConvertTo-DbaiMarkdown -Path $file -Raw
+                }
+            } catch {
+                Write-Warning "Failed to convert $file | $PSItem"
+                continue
+            }
 
-                    # Separate main object properties and array properties
-                    $mainObjectProperties = $item.PSObject.Properties | Where-Object { $_.Value -isnot [Array] }
-                    $arrayProperties = $item.PSObject.Properties | Where-Object { $_.Value -is [Array] }
+            Write-Progress -Activity "Processing file: $file" -Status "Converting to structured data" -PercentComplete 25
 
-                    # Handle main object
-                    $columns = $mainObjectProperties | ForEach-Object { "[$($_.Name)] NVARCHAR(MAX)" }
-                    $createTableSql = "IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = '$mainTableName' AND schema_id = SCHEMA_ID('$Schema'))
-                                       CREATE TABLE $Schema.$mainTableName (Id INT IDENTITY(1,1) PRIMARY KEY, $($columns -join ', '))"
-                    Write-Verbose "Executing SQL: $createTableSql"
-                    Invoke-DbaQuery -SqlInstance $server -Database $Database -Query $createTableSql
+            if ($file -match '\.json') {
+                $structuredData = Get-Content -Path $file -Raw | ConvertFrom-Json
+            } else {
+                $splat = @{
+                    Content       = $content
+                    JsonSchema    = $JsonSchema
+                    SystemMessage = $SystemMessage
+                }
+                $structuredData = ConvertTo-DbaiStructuredObject @splat
+                $structuredData | ConvertTo-Json -Depth 10 | Write-Debug
+            }
 
-                    $insertColumns = $mainObjectProperties.Name -join ', '
-                    $insertValues = $mainObjectProperties | ForEach-Object {
-                        if ($null -eq $_.Value) { "NULL" } else { "'$($_.Value -replace "'", "''")'" }
-                    }
-                    $insertSql = "INSERT INTO $Schema.$mainTableName ($insertColumns) VALUES ($($insertValues -join ', ')); SELECT SCOPE_IDENTITY() AS Id"
-                    Write-Verbose "Executing SQL: $insertSql"
-                    $mainId = (Invoke-DbaQuery -SqlInstance $server -Database $Database -Query $insertSql).Id
-                    Write-Verbose "Data inserted into main table with ID: $mainId"
+            $tableNames = @()
+            $selectStatements = @()
+            $sqlResults = @()
 
-                    # Handle array properties
-                    foreach ($arrayProp in $arrayProperties) {
-                        $childTableName = "${mainTableName}_$($arrayProp.Name)"
-                        Write-Verbose "Processing child table: $childTableName"
+            Write-Progress -Activity "Processing file: $file" -Status "Creating and populating tables" -PercentComplete 50
 
-                        $createChildTableSql = @"
-    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = '$childTableName' AND schema_id = SCHEMA_ID('$Schema'))
-    CREATE TABLE $Schema.$childTableName (
-        Id INT IDENTITY(1,1) PRIMARY KEY,
-        ${mainTableName}Id INT,
-        [vaccine_name] NVARCHAR(MAX)
-    )
-"@
-                        Write-Verbose "Executing SQL: $createChildTableSql"
-                        Invoke-DbaQuery -SqlInstance $server -Database $Database -Query $createChildTableSql
+            foreach ($item in $structuredData) {
+                $mainTableName = $schemaObject.name
+                if (-not $mainTableName) {
+                    $mainTableName = (Get-Item -Path $file).BaseName
+                }
+                $tableNames += $mainTableName
+                Write-Verbose "Processing main table: $mainTableName"
 
-                        $nestedTableName = "${childTableName}_administration_records"
-                        $createNestedTableSql = @"
-    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = '$nestedTableName' AND schema_id = SCHEMA_ID('$Schema'))
-    CREATE TABLE $Schema.$nestedTableName (
-        Id INT IDENTITY(1,1) PRIMARY KEY,
-        ${childTableName}Id INT,
-        [date_administered] NVARCHAR(MAX),
-        [veterinarian] NVARCHAR(MAX)
-    )
-"@
-                        Write-Verbose "Executing SQL: $createNestedTableSql"
-                        Invoke-DbaQuery -SqlInstance $server -Database $Database -Query $createNestedTableSql
-
-                        foreach ($childItem in $arrayProp.Value) {
-                            $insertChildSql = @"
-        INSERT INTO $Schema.$childTableName (${mainTableName}Id, [vaccine_name])
-        VALUES ($mainId, '$($childItem.vaccine_name)');
-        SELECT SCOPE_IDENTITY() AS Id
-"@
-                            Write-Verbose "Executing SQL: $insertChildSql"
-                            $childId = (Invoke-DbaQuery -SqlInstance $server -Database $Database -Query $insertChildSql).Id
-                            Write-Verbose "Data inserted into child table with ID: $childId"
-
-                            foreach ($adminRecord in $childItem.administration_records) {
-                                $insertNestedSql = @"
-            INSERT INTO $Schema.$nestedTableName (${childTableName}Id, [date_administered], [veterinarian])
-            VALUES ($childId, '$($adminRecord.date_administered)', '$($adminRecord.veterinarian)');
-            SELECT SCOPE_IDENTITY() AS Id
-"@
-                                Write-Verbose "Executing SQL: $insertNestedSql"
-                                $nestedId = (Invoke-DbaQuery -SqlInstance $server -Database $Database -Query $insertNestedSql).Id
-                                Write-Verbose "Data inserted into nested table with ID: $nestedId"
-                            }
-                        }
+                $columns = $item.PSObject.Properties | Where-Object { $_.Value -isnot [Array] } | ForEach-Object { "[$($_.Name)] NVARCHAR(MAX)" }
+                $createTableSql = "IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = @tableName AND schema_id = SCHEMA_ID(@schema)) CREATE TABLE $Schema.$mainTableName (Id INT IDENTITY(1,1) PRIMARY KEY, $($columns -join ', '))"
+                $createTableParams = @{
+                    Query         = $createTableSql
+                    SqlParameters = @{
+                        tableName = $mainTableName
+                        schema    = $Schema
                     }
                 }
-                Write-Verbose "File processing complete: $file"
-            } catch {
-                throw "Error processing file $file | $PSItem"
+                Invoke-DbaQuery @createTableParams
+
+                $insertColumns = ($item.PSObject.Properties | Where-Object { $_.Value -isnot [Array] }).Name
+                $insertParams = @{}
+                $insertParamNames = @()
+                foreach ($prop in ($item.PSObject.Properties | Where-Object { $_.Value -isnot [Array] })) {
+                    $paramName = "@" + $prop.Name
+                    $insertParams[$prop.Name] = $prop.Value
+                    $insertParamNames += $paramName
+                }
+                $insertSql = "INSERT INTO $Schema.$mainTableName ($($insertColumns -join ', ')) VALUES ($($insertParamNames -join ', ')); SELECT SCOPE_IDENTITY() AS Id"
+                $insertParams = @{
+                    Query         = $insertSql
+                    SqlParameters = $insertParams
+                }
+                $mainId = (Invoke-DbaQuery @insertParams).Id
+
+                $selectStatements += "SELECT TOP 10 * FROM $Schema.$mainTableName"
+                $sqlResults += Invoke-DbaQuery -Query "SELECT TOP 10 * FROM $Schema.$mainTableName"
+
+                $item.PSObject.Properties | Where-Object { $_.Value -is [Array] } | ForEach-Object {
+                    $childTableName = "${mainTableName}_$($_.Name)"
+                    $tableNames += $childTableName
+                    Write-Verbose "Processing child table: $childTableName"
+
+                    $childColumns = $_.Value[0].PSObject.Properties | ForEach-Object { "[$($_.Name)] NVARCHAR(MAX)" }
+                    $createChildTableSql = "IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = @tableName AND schema_id = SCHEMA_ID(@schema)) CREATE TABLE $Schema.$childTableName (Id INT IDENTITY(1,1) PRIMARY KEY, ${mainTableName}Id INT, $($childColumns -join ', '))"
+
+                    $createChildTableParams = @{
+                        Query         = $createChildTableSql
+                        SqlParameters = @{
+                            tableName = $childTableName
+                            schema    = $Schema
+                        }
+                    }
+                    Invoke-DbaQuery @createChildTableParams
+
+                    foreach ($childItem in $_.Value) {
+                        $childInsertColumns = @("${mainTableName}Id") + $childItem.PSObject.Properties.Name
+                        $childInsertParams = @{
+                            "${mainTableName}Id" = $mainId
+                        }
+                        $childInsertParamNames = @("@${mainTableName}Id")
+                        foreach ($prop in $childItem.PSObject.Properties) {
+                            $paramName = "@" + $prop.Name
+                            $childInsertParams[$prop.Name] = $prop.Value
+                            $childInsertParamNames += $paramName
+                        }
+                        $childInsertSql = "INSERT INTO $Schema.$childTableName ($($childInsertColumns -join ', ')) VALUES ($($childInsertParamNames -join ', '))"
+                        $childInsertParams = @{
+                            Query         = $childInsertSql
+                            SqlParameters = $childInsertParams
+                        }
+                        Invoke-DbaQuery @childInsertParams
+                    }
+
+                    $selectStatements += "SELECT TOP 10 * FROM $Schema.$childTableName"
+                    $sqlResults += Invoke-DbaQuery -Query "SELECT TOP 10 * FROM $Schema.$childTableName"
+                }
             }
+
+            Write-Progress -Activity "Processing file: $file" -Status "Generating output" -PercentComplete 90
+
+            [pscustomobject]@{
+                ProcessedFile    = (Get-Item $file).Name
+                Markdown         = $content
+                StructuredData   = $structuredData
+                TableNames       = $tableNames
+                SelectStatements = $selectStatements
+                SqlResults       = $sqlResults
+            }
+
+            Write-Progress -Activity "Processing file: $file" -Status "Complete" -PercentComplete 100
         }
-    }
-    end {
-        Write-Progress -Completed -Status "Import complete"
-        Write-Verbose "Import-DbaiFile completed"
+        Write-Progress -Activity "Processing files" -Status "Complete" -PercentComplete 100
     }
 }
