@@ -5,23 +5,36 @@ function Test-SqlQuery {
     )
 
     $body = @{
-        model       = "gpt-3.5-turbo"
-        messages    = @(
+        model           = "gpt-4o-2024-08-06"
+        messages        = @(
             @{
-                "role"    = "system"
-                "content" = "You are a helpful assistant and SQL expert."
+                role    = "system"
+                content = "You are a helpful assistant and SQL expert."
             },
             @{
-                "role"    = "user"
-                "content" = "Check the following $SqlStatement"
+                role    = "user"
+                content = "Translate the following natural language query into a SQL query: $query"
             }
         )
-        tools       = $Tools
-        tool_choice = @{
-            type     = "function"
-            function = @{
-                name = "examine_sql"
+        tools           = $Tools
+        response_format = @{
+            type        = "json_schema"
+            json_schema = @{
+                type       = "object"
+                properties = @{
+                    valid  = @{
+                        type = "boolean"
+                    }
+                    issues = @{
+                        type  = "array"
+                        items = @{
+                            type = "string"
+                        }
+                    }
+                }
+                required   = @("valid", "issues")
             }
+            strict      = $true
         }
     } | ConvertTo-Json -Compress -Depth 10
 
@@ -32,10 +45,9 @@ function Test-SqlQuery {
         Headers = @{
             "Content-Type"  = "application/json"
             "Authorization" = "Bearer $env:OpenAIKey"
-            "OpenAI-Beta"   = "assistants=v2"
         }
     }
     $results = Invoke-RestMethod @splat
 
-    $results.choices.message.tool_calls.function.arguments | ConvertFrom-Json
+    $results.choices[0].message.content | ConvertFrom-Json
 }

@@ -211,7 +211,7 @@ function Invoke-DbaiQuery {
                     Write-Progress -Status "Waiting for run to complete" -PercentComplete ((7 / 10) * 100)
                     $rundata = PSOpenAI\Wait-ThreadRun -Run $rundata
                 } else {
-                    Write-Error "Unsupported required action type: $($requiredAction.type)"
+                    throw "Unsupported required action type: $($requiredAction.type)"
                     break
                 }
             }

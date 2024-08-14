@@ -73,7 +73,7 @@ function New-DbaiAssistant {
             "database" {
                 foreach ($db in $Database) {
                     if (-not $PSBoundParameters.Instructions) {
-                        $instructionsfile = Join-Path -Path $script:ModuleRoot -Childpath instruct-query.txt
+                        $instructionsfile = Join-Path -Path $script:ModuleRootLib -Childpath instruct-query.txt
                         $Instructions = Get-Content $instructionsfile -Raw
                     }
                     if (-not $PSBoundParameters.FunctionDescription) {
@@ -156,7 +156,7 @@ function New-DbaiAssistant {
                     $Description = "Copilot for dbatools."
                 }
                 if (-not $PSBoundParameters.Instructions) {
-                    $instructionsfile = Join-Path -Path $script:ModuleRoot -Childpath instruct-dbatools.txt
+                    $instructionsfile = Join-Path -Path $script:ModuleRootLib -Childpath instruct-dbatools.txt
                     $Instructions = Get-Content $instructionsfile -Raw
                 }
                 if (-not $PSBoundParameters.FunctionDescription) {

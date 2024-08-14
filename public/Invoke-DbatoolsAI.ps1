@@ -210,7 +210,7 @@ function Invoke-DbatoolsAI {
                     Write-Verbose "Completion: $($rundata.usage.completion_tokens)"
                     Write-Verbose "Totaltokens: $($rundata.usage.total_tokens)"
                 } else {
-                    Write-Error "Unsupported required action type: $($requiredAction.type)"
+                    throw "Unsupported required action type: $($requiredAction.type)"
                     break
                 }
             }

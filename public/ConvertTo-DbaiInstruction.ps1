@@ -44,7 +44,7 @@ function ConvertTo-DbaiInstruction {
     )
     begin {
         if (-not $Instructions) {
-            $instructionsfile = Join-Path -Path $script:ModuleRoot -Childpath instructions.txt
+            $instructionsfile = Join-Path -Path $script:ModuleRootLib -Childpath instructions.txt
             $Instructions = Get-Content $instructionsfile -Raw
         }
     }

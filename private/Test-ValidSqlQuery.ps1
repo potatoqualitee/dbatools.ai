@@ -5,23 +5,36 @@ function Test-ValidSqlQuery {
     )
 
     $body = @{
-        model       = "gpt-3.5-turbo"
-        messages    = @(
+        model           = "gpt-4o-2024-08-06"
+        messages        = @(
             @{
-                "role"    = "system"
-                "content" = "You are a helpful assistant and SQL expert that checks if the given text is a valid SQL statement."
+                role    = "system"
+                content = "You are a helpful assistant."
             },
             @{
-                "role"    = "user"
-                "content" = "Is the following a valid SQL statement: $SqlStatement"
+                role    = "user"
+                content = "Is the following a valid SQL statement: $SqlStatement"
             }
         )
-        tools       = $Tools
-        tool_choice = @{
-            type     = "function"
-            function = @{
-                name = "examine_sql"
+        tools           = $Tools
+        response_format = @{
+            type        = "json_schema"
+            json_schema = @{
+                type       = "object"
+                properties = @{
+                    valid  = @{
+                        type = "boolean"
+                    }
+                    issues = @{
+                        type  = "array"
+                        items = @{
+                            type = "string"
+                        }
+                    }
+                }
+                required   = @("valid", "issues")
             }
+            strict      = $true
         }
     } | ConvertTo-Json -Compress -Depth 10
 
@@ -37,5 +50,5 @@ function Test-ValidSqlQuery {
     }
     $results = Invoke-RestMethod @splat
 
-    $results.choices.message.tool_calls.function.arguments | ConvertFrom-Json
+    $results.choices[0].message.content | ConvertFrom-Json
 }
