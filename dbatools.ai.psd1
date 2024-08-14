@@ -36,7 +36,7 @@
         'ConvertTo-DbaiMarkdown',
         'ConvertTo-DbaiStructuredObject',
         'Enter-DbaiDatabase',
-        'Import-DbaiStructuredObject',
+        'Import-DbaiFile',
         'Invoke-DbatoolsAI',
         'Invoke-DbaiQuery',
         'New-DbaiAssistant'

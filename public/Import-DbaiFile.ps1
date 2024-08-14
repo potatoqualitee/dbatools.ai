@@ -1,4 +1,48 @@
-function Import-DbaiStructuredObject {
+function Import-DbaiFile {
+<#
+    .SYNOPSIS
+    Imports structured data from files into a SQL Server database.
+
+    .DESCRIPTION
+    The Import-DbaiFile function processes files (typically PDFs), converts them to structured data based on a provided JSON schema, and imports the data into SQL Server tables. It handles nested data structures and supports batch processing of multiple files.
+
+    .PARAMETER Path
+    Specifies the path(s) to the file(s) to be imported. Defaults to an 'immunization.pdf' file in the module's lib directory.
+
+    .PARAMETER JsonSchemaPath
+    Specifies the path to the JSON schema file. Defaults to an 'immunization.json' file in the module's lib directory.
+
+    .PARAMETER JsonSchema
+    Specifies the JSON schema as a string. If provided, this takes precedence over JsonSchemaPath.
+
+    .PARAMETER SqlInstance
+    Specifies the SQL Server instance to connect to. Defaults to "localhost".
+
+    .PARAMETER SqlCredential
+    Specifies the credentials for SQL Server authentication.
+
+    .PARAMETER Database
+    Specifies the target database name. Defaults to "Northwind".
+
+    .PARAMETER Schema
+    Specifies the database schema to use. Defaults to "dbo".
+
+    .PARAMETER BatchSize
+    Specifies the number of records to process in each batch. Defaults to 50000.
+
+    .PARAMETER SystemMessage
+    Specifies a system message for data conversion. Defaults to "Convert text to structured data."
+
+    .EXAMPLE
+    PS C:\> Import-DbaiFile -Path "C:\Data\immunization.pdf" -SqlInstance sql01 -Database HealthDB
+
+    This example imports data from the specified PDF file into the HealthDB database on sql01.
+
+    .EXAMPLE
+    PS C:\> Get-ChildItem "C:\Data\*.pdf" | Import-DbaiFile -SqlInstance sql01 -Database HealthDB
+
+    This example imports data from all PDF files in the C:\Data directory into the HealthDB database on sql01.
+#>
     [CmdletBinding()]
     param (
         [Parameter(ValueFromPipelineByPropertyName)]
@@ -175,6 +219,6 @@ function Import-DbaiStructuredObject {
     }
     end {
         Write-Progress -Completed -Status "Import complete"
-        Write-Verbose "Import-DbaiStructuredObject completed"
+        Write-Verbose "Import-DbaiFile completed"
     }
 }
