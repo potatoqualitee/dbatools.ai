@@ -450,3 +450,7 @@ And this for `Invoke-DbatoolsAI`
 ## Limitations and Considerations
 
 This module is a proof of concept and should not be run in prod.
+
+## Notes
+
+Pronounced: DBA tools dot AI
