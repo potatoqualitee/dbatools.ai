@@ -202,14 +202,27 @@ function ConvertTo-DbaiMarkdown {
     }
     end {
         Write-Verbose "Cleaning up resources"
-        try {
-            $null = Remove-Thread -ThreadId $thread.id
-            Write-Verbose "Thread removed successfully"
-            $null = Remove-Assistant -AssistantId $assistant.id
-            Write-Verbose "Assistant removed successfully"
-        } catch {
-            Write-Warning "Failed to clean up resources: $PSItem"
+        if ($thread) {
+            Write-Verbose "Attempting to delete thread: $($thread.id)"
+            try {
+                $null = Remove-Thread -ThreadId $thread.id
+                Write-Verbose "Thread deleted successfully"
+            } catch {
+                Write-Verbose "Failed to delete thread: $PSItem"
+            }
         }
+
+        if ($assistant) {
+            Write-Verbose "Attempting to delete assistant: $($assistant.id)"
+            try {
+                $null = Remove-Assistant -AssistantId $assistant.id
+                Write-Verbose "Assistant deleted successfully"
+            } catch {
+                Write-Verbose "Failed to delete assistant: $PSItem"
+            }
+        }
+
         Write-Verbose "ConvertTo-DbaiMarkdown function completed"
+        Write-Progress -Completed
     }
 }
