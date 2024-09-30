@@ -1,0 +1,39 @@
+{
+    "name": "dbatools.ai",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "forwardPorts": [
+        1433
+    ],
+    "portsAttributes": {
+        "1433": {
+            "label": "MSSQL"
+        }
+    },
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "powershell.powerShellAdditionalExePaths": {
+                    "PowerShell": "/usr/bin/pwsh"
+                },
+                "powershell.powerShellDefaultVersion": "PowerShell",
+                "terminal.integrated.profiles.linux": {
+                    "pwsh": {
+                        "path": "/usr/bin/pwsh",
+                        "icon": "terminal-powershell"
+                    }
+                },
+                "terminal.integrated.shell.linux": "pwsh",
+                "terminal.integrated.defaultProfile.linux": "pwsh"
+            },
+            "extensions": [
+                "ms-vscode.powershell",
+                "dbatools.search",
+                "ms-windows-ai-studio.windows-ai-studio",
+                "ms-dotnettools.dotnet-interactive-vscode"
+            ]
+        }
+    },
+    "postCreateCommand": "pwsh /tmp/setup.ps1"
+}
