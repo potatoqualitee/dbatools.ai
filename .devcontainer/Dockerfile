@@ -15,8 +15,8 @@ RUN set -ex; \
 
 
 # Copy scripts and make them executable
-#COPY scripts/*.ps1 /tmp/
-#RUN chmod +x /tmp/*.ps1
+COPY scripts/*.ps1 /home/mssql
+RUN chmod +x /home/mssql/*.ps1
 
 # Switch to the mssql user
 USER mssql

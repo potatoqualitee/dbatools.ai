@@ -1,6 +1,6 @@
 {
     "name": "dbatools.ai",
-    "workspaceFolder": "/workspace",
+    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
     "dockerComposeFile": [
         "docker-compose.yml"
     ],
