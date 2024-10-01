@@ -1,3 +1,6 @@
+# show the history path
+(Get-PSReadLineOption).HistorySavePath | Write-Warning
+
 # ignore the tls warnings
 $null = Set-DbatoolsInsecureConnection
 

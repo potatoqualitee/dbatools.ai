@@ -8,7 +8,8 @@ RUN set -ex; \
     apt-get update && \
     apt-get install -y --no-install-recommends powershell-lts dotnet-sdk-8.0 && \
     mkdir -p /home/mssql/.config/powershell && \
-    chown -R mssql /home/mssql
+    chown -R mssql /home/mssql /tmp; \
+    chmod 777 /tmp
 
 # convert CRLF to LF in case Windows or VS Code changed it
 # RUN find /opt/mssql/bin/ -type f \( -name "*.sql" -o -name "*.env" -o -name "*.sh" \) -exec sed -i 's/\r$//' {} \;
