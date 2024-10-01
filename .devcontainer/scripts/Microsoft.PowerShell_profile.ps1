@@ -1,5 +1,5 @@
 # show the history path
-(Get-PSReadLineOption).HistorySavePath | Write-Warning
+Remove-Module -Name PSReadline
 
 # ignore the tls warnings
 $null = Set-DbatoolsInsecureConnection
