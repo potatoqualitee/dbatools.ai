@@ -5,5 +5,5 @@
 $null = Set-DbatoolsInsecureConnection
 
 # set the default sql credential
-$cred = New-Object PSCredential("sqladmin", (ConvertTo-SecureString "dbatools.IO" -AsPlainText -Force))
+$cred = New-Object PSCredential("sa", (ConvertTo-SecureString "dbatools.IO" -AsPlainText -Force))
 $PSDefaultParameterValues["*:SqlCredential"] = $cred

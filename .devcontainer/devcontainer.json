@@ -40,8 +40,5 @@
             ]
         }
     },
-    "mounts": [
-        "source=${localWorkspaceFolder}/.devcontainer/scripts/Microsoft.PowerShell_profile.ps1,target=/home/mssql/.config/powershell/Microsoft.PowerShell_profile.ps1,type=bind",
-        "source=${localWorkspaceFolder}/.devcontainer/scripts/setup.ps1,target=/home/mssql/setup.ps1,type=bind"
-    ]
+    "postStartCommand": "pwsh -noprofile /home/mssql/setup.ps1"
 }
