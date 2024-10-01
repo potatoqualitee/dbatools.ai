@@ -6,9 +6,10 @@ USER root
 # Prep
 RUN set -ex; \
     apt-get update && \
-    apt-get install -y --no-install-recommends powershell-lts dotnet-sdk-8.0 && \
-    mkdir -p /home/mssql/.config/powershell/PSReadLine && \
-    chown -R mssql /home/mssql
+    apt-get install -y --no-install-recommends powershell-lts git dotnet-sdk-8.0 && \
+    mkdir -p /home/mssql/.config/powershell ; \
+    chown -R mssql /home/mssql ; \
+    rm -rf /opt/microsoft/powershell/7-lts/Modules/PSReadLine
 
 # PSReadline is driving me crazy
 #/home/mssql/.local/share/powershell/PSReadLine/Visual Studio Code Host_history.txt
