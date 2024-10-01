@@ -11,13 +11,9 @@ RUN set -ex; \
     chown -R mssql /home/mssql ; \
     rm -rf /opt/microsoft/powershell/7-lts/Modules/PSReadLine
 
-# PSReadline is driving me crazy
-#/home/mssql/.local/share/powershell/PSReadLine/Visual Studio Code Host_history.txt
-
-
 # Copy scripts and make them executable
 COPY scripts/*.ps1 /home/mssql
-RUN chmod +x /home/mssql/*.ps1
+RUN chmod +x /home/mssql/*.ps1; pwsh -noprofile /home/mssql/setup.ps1
 
 # Switch to the mssql user
 USER mssql
