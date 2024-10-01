@@ -5,6 +5,4 @@ services:
       dockerfile: Dockerfile
     ports:
       - 1433:1433
-    volumes:
-      - ..:/workspace
     command: ["/opt/mssql/bin/sqlservr"]
