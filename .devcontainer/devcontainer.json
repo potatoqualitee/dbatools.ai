@@ -1,8 +1,15 @@
 {
     "name": "dbatools.ai",
-    "build": {
-        "dockerfile": "Dockerfile"
+    "workspaceFolder": "/workspace",
+    "dockerComposeFile": [
+        "docker-compose.yml"
+    ],
+    "remoteEnv": {
+        "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
+        "MY_SERVERS": "mssql",
+        "MY_SERVER": "mssql"
     },
+    "service": "mssql",
     "forwardPorts": [
         1433
     ],
