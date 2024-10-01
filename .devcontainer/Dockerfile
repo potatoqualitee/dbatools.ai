@@ -16,7 +16,7 @@ RUN rm -rf /opt/microsoft/powershell/7-lts/Modules/PSReadLine
 RUN apt-get update && apt-get install -y --no-install-recommends powershell-lts git dotnet-sdk-8.0
 
 # setup as root
-RUN pwsh -noprofile /tmp/setup.ps1
+RUN pwsh -noprofile /home/mssql/setup.ps1
 
 # Switch to the mssql user
 RUN chown -R mssql /home/mssql
