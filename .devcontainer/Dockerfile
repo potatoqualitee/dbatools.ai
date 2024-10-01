@@ -7,8 +7,12 @@ USER root
 RUN set -ex; \
     apt-get update && \
     apt-get install -y --no-install-recommends powershell-lts dotnet-sdk-8.0 && \
-    mkdir -p /home/mssql/.config/powershell && \
+    mkdir -p /home/mssql/.config/powershell/PSReadLine && \
     chown -R mssql /home/mssql
+
+# PSReadline is driving me crazy
+#/home/mssql/.local/share/powershell/PSReadLine/Visual Studio Code Host_history.txt
+
 
 # Copy scripts and make them executable
 COPY scripts/*.ps1 /tmp/
