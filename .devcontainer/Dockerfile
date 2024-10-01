@@ -3,9 +3,6 @@ FROM dbatools/sqlinstance:latest
 # Switch to root to perform privileged operations
 USER root
 
-# Expose the SQL Server port
-EXPOSE 1433
-
 # Install PowerShell
 RUN set -ex; \
     apt-get update && \
@@ -28,4 +25,4 @@ USER mssql
 # Set the entrypoint
 # ENTRYPOINT /opt/mssql/bin/sqlservr & /opt/mssql/bin/post-entrypoint.sh
 # Run SQL Server process
-CMD /opt/mssql/bin/sqlservr
+# CMD /opt/mssql/bin/sqlservr
