@@ -19,6 +19,23 @@
     "customizations": {
         "vscode": {
             "settings": {
+                "mssql.connections": [
+                    {
+                        "server": "localhost",
+                        "database": "Northwind",
+                        "authenticationType": "SqlLogin",
+                        "user": "sa",
+                        "password": "dbatools.IO",
+                        "emptyPasswordInput": false,
+                        "savePassword": true,
+                        "profileName": "localhost",
+                        "encrypt": "Mandatory",
+                        "trustServerCertificate": true,
+                        "connectTimeout": 15,
+                        "commandTimeout": 30,
+                        "applicationName": "vscode-mssql"
+                    }
+                ],
                 "powershell.powerShellAdditionalExePaths": {
                     "PowerShell": "/usr/bin/pwsh"
                 },
