@@ -13,7 +13,7 @@ RUN set -ex; \
 
 # Copy scripts and make them executable
 COPY scripts/*.ps1 /home/mssql
-RUN chmod +x /home/mssql/*.ps1; pwsh -noprofile /home/mssql/setup.ps1
+RUN chmod +x /home/mssql/*.ps1; sh -c pwsh -noprofile /home/mssql/setup.ps1
 
 # Switch to the mssql user
 USER mssql
