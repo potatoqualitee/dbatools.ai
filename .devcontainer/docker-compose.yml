@@ -1,13 +1,11 @@
-version: '3.7'
+version: "3.7"
 services:
   mssql:
     build:
       context: .
       dockerfile: Dockerfile
-    volumes:
-      - .:/workspace
     ports:
-      - "1433:1433"
-    environment:
-      ACCEPT_EULA: "Y"
+      - 1433:1433
+    volumes:
+      - ..:/workspace
     command: ["/opt/mssql/bin/sqlservr"]

@@ -5,12 +5,15 @@
         "docker-compose.yml"
     ],
     "service": "mssql",
-    "forwardPorts": [
-        1433
-    ],
     "portsAttributes": {
         "1433": {
             "label": "MSSQL"
+        }
+    },
+    "secrets": {
+        "OPENAI_API_KEY": {
+            "description": "This is your OpenAI key for the openai.com API.",
+            "documentationUrl": "https://platform.openai.com/api-keys"
         }
     },
     "customizations": {
@@ -37,5 +40,8 @@
             ]
         }
     },
-    "postCreateCommand": "pwsh /tmp/setup.ps1"
+    "mounts": [
+        "source=${localWorkspaceFolder}/.devcontainer/scripts/Microsoft.PowerShell_profile.ps1,target=/home/mssql/.config/powershell/Microsoft.PowerShell_profile.ps1,type=bind"
+    ],
+    "postCreateCommand": "pwsh -noprofile /tmp/setup.ps1"
 }
