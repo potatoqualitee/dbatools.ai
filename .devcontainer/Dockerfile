@@ -10,7 +10,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends powershell-lts 
 RUN mkdir -p /home/mssql/.config/powershell
 COPY scripts/*.ps1 /home/mssql
 RUN chmod +x /home/mssql/*.ps1
-RUN mv /home/mssql/Microsoft.PowerShell_profile.ps1 /home/mssql/.config/powershell/Microsoft.PowerShell_profile.ps1
+RUN mv /home/mssql/profile.ps1 /home/mssql/.config/powershell/Microsoft.PowerShell_profile.ps1
+RUN mv /home/mssql/profile.ps1 /home/mssql/.config/powershell/Microsoft.dotnet-interactive_profile.ps1
 
 # Switch to the mssql user
 RUN chown -R mssql /home/mssql
