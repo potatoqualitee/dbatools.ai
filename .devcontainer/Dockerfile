@@ -1,6 +1,4 @@
 FROM mcr.microsoft.com/mssql/server
-ENV ACCEPT_EULA=Y
-ENV MSSQL_SA_PASSWORD=dbatools.IO
 
 # Switch to root to perform privileged operations
 USER root
