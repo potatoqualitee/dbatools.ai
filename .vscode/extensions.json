@@ -2,8 +2,9 @@
     // See http://go.microsoft.com/fwlink/?LinkId=827846
     // for the documentation about the extensions.json format
     "recommendations": [
-        "ms-vscode.PowerShell",
+        "ms-vscode.powershell",
         "dbatools.search",
-        "ms-azuretools.vscode-docker"
+        "ms-windows-ai-studio.windows-ai-studio",
+        "ms-mssql.mssql"
     ]
 }

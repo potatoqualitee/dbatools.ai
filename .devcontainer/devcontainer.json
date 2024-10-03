@@ -1,0 +1,63 @@
+{
+    "name": "dbatools.ai",
+    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+    "dockerComposeFile": [
+        "docker-compose.yml"
+    ],
+    "service": "mssql",
+    "portsAttributes": {
+        "1433": {
+            "label": "MSSQL"
+        }
+    },
+    "secrets": {
+        "OPENAI_API_KEY": {
+            "description": "This is your OpenAI key for the openai.com API.",
+            "documentationUrl": "https://platform.openai.com/api-keys"
+        }
+    },
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "mssql.connections": [
+                    {
+                        "server": "localhost",
+                        "database": "Northwind",
+                        "authenticationType": "SqlLogin",
+                        "user": "sa",
+                        "password": "dbatools.IO",
+                        "emptyPasswordInput": false,
+                        "savePassword": true,
+                        "profileName": "localhost",
+                        "encrypt": "Mandatory",
+                        "trustServerCertificate": true,
+                        "connectTimeout": 15,
+                        "commandTimeout": 30,
+                        "applicationName": "vscode-mssql"
+                    }
+                ],
+                "powershell.powerShellAdditionalExePaths": {
+                    "PowerShell": "/usr/bin/pwsh"
+                },
+                "powershell.powerShellDefaultVersion": "PowerShell",
+                "terminal.integrated.profiles.linux": {
+                    "pwsh": {
+                        "path": "/usr/bin/pwsh",
+                        "icon": "terminal-powershell"
+                    }
+                },
+                "terminal.integrated.shell.linux": "pwsh",
+                "terminal.integrated.defaultProfile.linux": "pwsh"
+            },
+            "extensions": [
+                "ms-vscode.powershell",
+                "dbatools.search",
+                "ms-windows-ai-studio.windows-ai-studio",
+                "ms-dotnettools.dotnet-interactive-vscode",
+                "ms-mssql.mssql",
+                "tomoki1207.pdf"
+            ]
+        }
+    },
+    "postStartCommand": "pwsh -noprofile /home/mssql/setup.ps1"
+}

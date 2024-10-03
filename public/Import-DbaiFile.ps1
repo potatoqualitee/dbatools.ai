@@ -127,12 +127,12 @@ function Import-DbaiFile {
     process {
         # if path matches immunization.pdf and the schema is not immunization.json then throw
         # say cant use the default schema with a different file
-        if ("$Path" -match "immunization.pdf" -and "$JsonSchemaPath" -notmatch "immunization.json") {
+        if ("$Path" -match "immunization" -and "$JsonSchemaPath" -notmatch "immunization.json") {
             Write-Warning "Invalid schema for immunization.pdf. Please provide immunization.json schema."
             continue
         }
         # same for jsonschema back to path
-        if ("$JsonSchemaPath" -match "immunization.json" -and "$Path" -notmatch "immunization.pdf") {
+        if ("$JsonSchemaPath" -match "immunization.json" -and "$Path" -notmatch "immunization") {
             Write-Warning "Invalid file for immunization.json schema. Please provide immunization.pdf file."
             continue
         }

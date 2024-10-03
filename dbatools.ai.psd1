@@ -11,7 +11,7 @@
     RootModule = 'dbatools.ai.psm1'
 
     # Version number of this module.
-    ModuleVersion = '1.2'
+    ModuleVersion = '1.3'
 
     # ID used to uniquely identify this module
     GUID = '1c4f2db2-5cff-4179-b755-ea7d228153ae'
@@ -29,7 +29,10 @@
     Description = 'dbatools.ai is a copilot for SQL Server databases'
 
     # Modules that must be imported into the global environment prior to importing this module
-    RequiredModules   = @('dbatools', @{ModuleName = 'PSOpenAI'; ModuleVersion = '4.1.1' })
+    RequiredModules   = @('dbatools',
+        @{ModuleName = 'finetuna'; ModuleVersion = '2.0' },
+    @{ModuleName = 'PSOpenAI'; ModuleVersion = '4.1.1' }
+    )
 
     FunctionsToExport = @(
         'ConvertTo-DbaiInstruction',
