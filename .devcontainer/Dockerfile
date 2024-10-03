@@ -13,6 +13,7 @@ RUN chmod +x /home/mssql/*.ps1
 RUN ls -la /home/mssql/*.ps1
 RUN cat /home/mssql/profile.ps1 > /home/mssql/.config/powershell/Microsoft.PowerShell_profile.ps1
 RUN cat /home/mssql/profile.ps1 > /home/mssql/.config/powershell/Microsoft.dotnet-interactive_profile.ps1
+RUN cat /home/mssql/profile.ps1 > /home/mssql/.config/powershell/Microsoft.VSCode_profile.ps1
 
 # Switch to the mssql user
 RUN chown -R mssql /home/mssql
