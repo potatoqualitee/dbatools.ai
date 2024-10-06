@@ -155,7 +155,7 @@ function Invoke-DbaiQuery {
             Write-Progress -Status "Processing message $($processedMessages + 1) of $totalMessages" -PercentComplete ((1 / 10) * 100)
 
             Write-Verbose "Stopping any existing thread runs"
-            $null = PSOpenAI\Get-ThreadRun -ThreadId $thread.id | Where-Object status -in "queued", "in_progress",  "requires_action" | Stop-ThreadRun
+            $null = PSOpenAI\Get-ThreadRun -ThreadId $thread.id -ErrorAction SilentlyContinue | Where-Object status -in "queued", "in_progress",  "requires_action" | Stop-ThreadRun -ErrorAction SilentlyContinue
             Write-Verbose "Adding user message to thread"
             $null = PSOpenAI\Add-ThreadMessage -ThreadId $thread.id -Role user -Message $msg
             Write-Verbose "Starting new thread run with assistant $($assistant.Id)"
@@ -219,6 +219,7 @@ function Invoke-DbaiQuery {
                             "Query"           = $sql
                             "As"              = "PSObject"
                             "EnableException" = $true
+                            "Database"        = $Database
                         }
                         try {
                             $result = Invoke-DbaQuery @params
