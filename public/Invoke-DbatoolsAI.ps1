@@ -32,6 +32,7 @@ function Invoke-DbatoolsAI {
     )
     begin {
         $PSDefaultParameterValues['Write-Progress:Activity'] = "Getting answer"
+        $PSDefaultParameterValues['*:Model'] = "gpt-4o-mini"
         $querykey = $AssistantName
 
         if (-not $script:threadcache[$querykey]) {

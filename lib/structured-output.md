@@ -7,7 +7,7 @@ Last year at DevDay, we introduced JSON mode—a useful building block for devel
 
 Generating structured data from unstructured inputs is one of the core use cases for AI in today's applications. Developers use the OpenAI API to build powerful assistants that have the ability to fetch data and answer questions via function calling, extract structured data for data entry, and build multi-step agentic workflows that allow LLMs to take actions. Developers have long been working around the limitations of LLMs in this area via open source tooling, prompting, and retrying requests repeatedly to ensure that model outputs match the formats needed to interoperate with their systems. Structured Outputs solves this problem by constraining OpenAI models to match developer-supplied schemas and by training our models to better understand complicated schemas.
 
-On our evals of complex JSON schema following, our new model gpt-4o-2024-08-06 with Structured Outputs scores a perfect 100%. In comparison, gpt-4-0613 scores less than 40%.
+On our evals of complex JSON schema following, our new model gpt-4o-mini with Structured Outputs scores a perfect 100%. In comparison, gpt-4-0613 scores less than 40%.
 
 ### How to use Structured Outputs
 
@@ -15,7 +15,7 @@ We're introducing Structured Outputs in two forms in the API:
 
 1. * * Function calling:** Structured Outputs via tools is available by setting `strict: true` within your function definition. This feature works with all models that support tools, including all models gpt-4-0613 and gpt-3.5-turbo-0613 and later. When Structured Outputs are enabled, model outputs will match the supplied tool definition.
 
-2. * * Response format parameter:** Developers can now supply a JSON Schema via `json_schema`, a new option for the `response_format` parameter. This is useful when the model is not calling a tool, but rather, responding to the user in a structured way. This feature works with our newest GPT-4o models: gpt-4o-2024-08-06, released today, and gpt-4o-mini-2024-07-18. When a `response_format` is supplied with `strict: true`, model outputs will match the supplied schema.
+2. * * Response format parameter:** Developers can now supply a JSON Schema via `json_schema`, a new option for the `response_format` parameter. This is useful when the model is not calling a tool, but rather, responding to the user in a structured way. This feature works with our newest GPT-4o models: gpt-4o-mini, released today, and gpt-4o-mini-2024-07-18. When a `response_format` is supplied with `strict: true`, model outputs will match the supplied schema.
 
 ### Safe Structured Outputs
 
@@ -39,7 +39,7 @@ Developers frequently use OpenAI's models to generate structured data for variou
 
 ### Under the hood
 
-We took a two-part approach to improving reliability for model outputs that match JSON Schema. First, we trained our newest model gpt-4o-2024-08-06 to understand complicated schemas and how best to produce outputs that match them. However, model behavior is inherently non-deterministic—despite this model's performance improvements (93% on our benchmark), it still did not meet the reliability that developers need to build robust applications. So we also took a deterministic, engineering-based approach to constrain the model's outputs to achieve 100% reliability.
+We took a two-part approach to improving reliability for model outputs that match JSON Schema. First, we trained our newest model gpt-4o-mini to understand complicated schemas and how best to produce outputs that match them. However, model behavior is inherently non-deterministic—despite this model's performance improvements (93% on our benchmark), it still did not meet the reliability that developers need to build robust applications. So we also took a deterministic, engineering-based approach to constrain the model's outputs to achieve 100% reliability.
 
 ### Constrained decoding
 
@@ -67,9 +67,9 @@ Structured Outputs is generally available today in the API.
 
 Structured Outputs with function calling is available on all models that support function calling in the API. This includes our newest models (gpt-4o,gpt-4o-mini), all models after and including gpt-4-0613 and gpt-3.5-turbo-0613, and any fine-tuned models that support function calling. This functionality is available on the Chat Completions API, Assistants API, and Batch API. Structured Outputs with function calling is also compatible with vision inputs.
 
-Structured Outputs with response formats is available on gpt-4o-mini and gpt-4o-2024-08-06 and any fine tunes based on these models. This functionality is available on the Chat Completions API, Assistants API, and Batch API. Structured Outputs with response formats is also compatible with vision inputs.
+Structured Outputs with response formats is available on gpt-4o-mini and gpt-4o-mini and any fine tunes based on these models. This functionality is available on the Chat Completions API, Assistants API, and Batch API. Structured Outputs with response formats is also compatible with vision inputs.
 
-By switching to the new gpt-4o-2024-08-06, developers save 50% on inputs ($2.50 / 1M input tokens) and 33% on outputs ($10.00 / 1M output tokens) compared to gpt-4o-2024-05-13.
+By switching to the new gpt-4o-mini, developers save 50% on inputs ($2.50 / 1M input tokens) and 33% on outputs ($10.00 / 1M output tokens) compared to gpt-4o-2024-05-13.
 
 To start using Structured Outputs, check out our docs.
 
@@ -111,7 +111,7 @@ const CalendarEvent = z.object({
 });
 
 const completion = await openai.beta.chat.completions.parse({
-  model: "gpt-4o-2024-08-06",
+  model: "gpt-4o-mini",
   messages: [
     { role: "system", content: "Extract the event information." },
     { role: "user", content: "Alice and Bob are going to a science fair on Friday." },
@@ -127,7 +127,7 @@ const event = completion.choices[0].message.parsed;
 Structured Outputs are available in our latest large language models, starting with GPT-4o:
 
 - `gpt-4o-mini-2024-07-18` and later
-- `gpt-4o-2024-08-06` and later
+- `gpt-4o-mini` and later
 
 Older models like `gpt-4-turbo` and earlier may use JSON mode instead.
 
@@ -151,7 +151,7 @@ Structured Outputs is the evolution of JSON mode. While both ensure valid JSON i
 |-------------------------------|--------------------|---------------------------|
 | Outputs valid JSON            | Yes                | Yes                       |
 | Adheres to schema             | Yes                | No                        |
-| Compatible models             | `gpt-4o-mini`, `gpt-4o-2024-08-06`, and later | `gpt-3.5-turbo`, `gpt-4-*`, `gpt-4o-*` |
+| Compatible models             | `gpt-4o-mini`, `gpt-4o-mini`, and later | `gpt-3.5-turbo`, `gpt-4-*`, `gpt-4o-*` |
 | Enabling                      | `response_format: { type: "json_schema", json_schema: {"strict": true, "schema": ...} }` | `response_format: { type: "json_object" }` |
 
 ### Examples
@@ -180,7 +180,7 @@ const MathReasoning = z.object({
 });
 
 const completion = await openai.beta.chat.completions.parse({
-  model: "gpt-4o-2024-08-06",
+  model: "gpt-4o-mini",
   messages: [
     { role: "system", content: "You are a helpful math tutor. Guide the user through the solution step by step." },
     { role: "user", content: "How can I solve 8x + 7 = -23?" },
@@ -246,7 +246,7 @@ const MathReasoning = z.object({
 });
 
 const completion = await openai.beta.chat.completions.parse({
-  model: "gpt-4o-2024-08-06",
+  model: "gpt-4o-mini",
   messages: [
     { role: "system", content: "You are a helpful math tutor. Guide the user through the solution step by step." },
     { role: "user", content: "How can I solve 8x + 7 = -23?" },
@@ -270,7 +270,7 @@ if (math_reasoning.refusal) {
   "id": "chatcmpl-9nYAG9LPNonX8DAyrkwYfemr3C8HC",
   "object": "chat.completion",
   "created": 1721596428,
-  "model": "gpt-4o-2024-08-06",
+  "model": "gpt-4o-mini",
   "choices": [
     {
       "index": 0,
