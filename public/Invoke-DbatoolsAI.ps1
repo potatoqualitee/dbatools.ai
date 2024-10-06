@@ -32,12 +32,15 @@ function Invoke-DbatoolsAI {
     )
     begin {
         $PSDefaultParameterValues['Write-Progress:Activity'] = "Getting answer"
+        $PSDefaultParameterValues['*:Model'] = "gpt-4o-mini"
         $querykey = $AssistantName
 
         if (-not $script:threadcache[$querykey]) {
+            Write-Verbose "Creating new thread cache object for key $querykey"
+            $assistant = Get-Assistant -All | Where-Object Name -eq $AssistantName | Select-Object -First 1
             $cacheobject = [PSCustomObject]@{
-                thread    =  PSOpenAI\New-Thread
-                assistant = $null
+                thread    = PSOpenAI\New-Thread
+                assistant = $assistant
             }
             $script:threadcache[$querykey] = $cacheobject
         } else {
@@ -45,7 +48,10 @@ function Invoke-DbatoolsAI {
             $assistant = $script:threadcache[$querykey].assistant
         }
 
-        $thread = $script:threadcache[$querykey].thread
+        if (-not $thread) {
+            $thread = $script:threadcache[$querykey].thread
+        }
+
         $totalMessages = $Message.Count
         $processedMessages = 0
         $sentence = @()

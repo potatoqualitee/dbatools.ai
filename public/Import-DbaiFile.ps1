@@ -94,9 +94,10 @@ function Import-DbaiFile {
         [string[]]$RequiredText
     )
     begin {
-        $PSDefaultParameterValues["*-Dba*:SqlInstance"] = $SqlInstance
-        $PSDefaultParameterValues["*-Dba*:SqlCredential"] = $SqlCredential
-        $PSDefaultParameterValues["*-Dba*:Database"] = $Database
+        $PSDefaultParameterValues["*:SqlInstance"] = $SqlInstance
+        $PSDefaultParameterValues["*:SqlCredential"] = $SqlCredential
+        $PSDefaultParameterValues["*DbaDatabase:Database"] = $Database
+        $PSDefaultParameterValues["*DbaQuery:Database"] = $Database
 
         try {
             $null = Connect-DbaInstance

@@ -86,7 +86,7 @@ Processes multiple PDF files, converting them to Markdown and then to structured
             try {
                 Write-Verbose "Preparing parameters for Request-ChatCompletion"
                 $params = @{
-                    Model         = "gpt-4o-2024-08-06"
+                    Model         = "gpt-4o-mini"
                     SystemMessage = $SystemMessage
                     Message       = $item
                     Format        = "json_schema"

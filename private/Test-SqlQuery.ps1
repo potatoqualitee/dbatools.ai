@@ -1,53 +1,47 @@
 function Test-SqlQuery {
     param (
-        [string]$SqlStatement,
-        [PSCustomObject[]]$Tools
+        [string]$SqlStatement
     )
-
-    $body = @{
-        model           = "gpt-4o-2024-08-06"
-        messages        = @(
-            @{
-                role    = "system"
-                content = "You are a helpful assistant and SQL expert."
-            },
-            @{
-                role    = "user"
-                content = "Translate the following natural language query into a SQL query: $query"
-            }
-        )
-        tools           = $Tools
-        response_format = @{
-            type        = "json_schema"
-            json_schema = @{
-                type       = "object"
-                properties = @{
-                    valid  = @{
-                        type = "boolean"
-                    }
-                    issues = @{
-                        type  = "array"
-                        items = @{
-                            type = "string"
-                        }
-                    }
+    # Define JSON schema for validation
+    $json = @{
+        name   = "examine_sql"
+        strict = $true
+        schema = @{
+            type                 = "object"
+            properties           = @{
+                dangerous     = @{
+                    type        = "boolean"
+                    description = "Does this SQL query modify data or is it potentially dangerous?"
                 }
-                required   = @("valid", "issues")
+                danger_reason = @{
+                    type        = "string"
+                    description = "If the query is dangerous, why?"
+                }
+                valid_sql     = @{
+                    type        = "boolean"
+                    description = "Is this a valid SQL statement?"
+                }
             }
-            strict      = $true
+            required             = @("dangerous", "valid_sql", "danger_reason")
+            additionalProperties = $false
         }
-    } | ConvertTo-Json -Compress -Depth 10
+    } | ConvertTo-Json -Depth 5
 
+    # Request parameters for chat completion
     $splat = @{
-        Uri     = "https://api.openai.com/v1/chat/completions"
-        Method  = "POST"
-        Body    = $body
-        Headers = @{
-            "Content-Type"  = "application/json"
-            "Authorization" = "Bearer $env:OpenAIKey"
-        }
+        Model      = "gpt-4o-mini"
+        Message    = "Is this a valid SQL query: $SqlStatement. Also, please determine if it is potentially dangerous and explain why if it is."
+        Format     = "json_schema"
+        JsonSchema = $json
     }
-    $results = Invoke-RestMethod @splat
 
-    $results.choices[0].message.content | ConvertFrom-Json
+    # Request to chat completion
+    $validationResult = (Request-ChatCompletion @splat).Answer | ConvertFrom-Json
+
+    # Output validation results
+    [PSCustomObject]@{
+        Valid        = $validationResult.valid_sql
+        Dangerous    = $validationResult.dangerous
+        DangerReason = $validationResult.danger_reason
+    }
 }

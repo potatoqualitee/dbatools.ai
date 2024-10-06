@@ -61,7 +61,7 @@ function ConvertTo-DbaiMarkdown {
             $splat = @{
                 Name               = $assistantName
                 Instructions       = $assistantInstructions
-                Model              = "gpt-4o-2024-08-06"
+                Model              = "gpt-4o-mini"
                 UseCodeInterpreter = $true
             }
             $assistant = New-Assistant @splat

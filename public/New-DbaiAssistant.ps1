@@ -24,7 +24,7 @@ function New-DbaiAssistant {
     Description of the function used to answer user questions about the database.
 
     .PARAMETER Model
-    The name of the AI model to use for the assistant. Default is "gpt-4o".
+    The name of the AI model to use for the assistant. Default is "gpt-4o-mini".
 
     .PARAMETER Force
     Forces the creation of a new assistant, even if one already exists for the specified database.
@@ -58,7 +58,7 @@ function New-DbaiAssistant {
         [string]$Description,
         [string]$Instructions,
         [string]$FunctionDescription,
-        [string]$Model = "gpt-4o",
+        [string]$Model = "gpt-4o-mini",
         [switch]$Force
     )
     process {
