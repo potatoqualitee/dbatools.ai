@@ -1,5 +1,5 @@
 function Invoke-DbaiQuery {
-<#
+    <#
     .SYNOPSIS
     Executes a natural language query on a SQL Server database.
 
@@ -119,7 +119,7 @@ function Invoke-DbaiQuery {
 
                 if (-not $assistant) {
                     try {
-                    $assistant = Get-DbaDatabase -EnableException | New-DbaiAssistant -ErrorAction Stop
+                        $assistant = Get-DbaDatabase -EnableException | New-DbaiAssistant -ErrorAction Stop
                     } catch {
                         throw $PSItem
                     }
@@ -167,18 +167,18 @@ function Invoke-DbaiQuery {
                         if (-not $SkipSafetyCheck) {
                             Write-Progress -Status "Checking SQL query validity" -PercentComplete ((5 / 10) * 100)
                             $output = Test-SqlQuery -SqlStatement $sql
-                            #WARNING: @{issues = System.Object[]; valid = True }
 
-                            if ($output.valid) {
-                                Write-Verbose "$sql is a valid SQL statement."
-
-                                if (-not $output.dangerous) {
-                                    Write-Verbose "The SQL query is safe."
-                                } else {
-                                    Write-Warning "The resulting SQL query ($sql) is dangerous because: $($output.danger_reason)"
-                                    continue
-                                }
+                            if (-not $output.Valid) {
+                                Write-Warning "The SQL query ($sql) is not valid."
+                                continue
                             }
+
+                            if ($output.Dangerous) {
+                                Write-Warning "The resulting SQL query ($sql) is dangerous because: $($output.DangerReason)"
+                                continue
+                            }
+
+                            Write-Verbose "$sql is a valid and safe SQL statement."
                         }
 
                         Write-Progress -Status "Executing SQL query" -PercentComplete ((6 / 10) * 100)
