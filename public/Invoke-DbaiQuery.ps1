@@ -37,9 +37,9 @@ function Invoke-DbaiQuery {
     param (
         [Parameter(Mandatory, ValueFromPipeline, ValueFromRemainingArguments, Position = 0)]
         [string[]]$Message,
-        [string]$SqlInstance = "localhost",
+        [string]$SqlInstance,
         [pscredential]$SqlCredential,
-        [string]$Database = "Northwind",
+        [string]$Database,
         [string]$AssistantName,
         [ValidateSet("PSObject", "String")]
         [string]$As = "String",
@@ -55,6 +55,22 @@ function Invoke-DbaiQuery {
         }
         if ($SqlInstance -match '\\') {
             $servername = $servername -replace '\\', '-'
+        }
+
+        if (-not $SqlInstance) { $SqlInstance = "localhost" }
+        if (-not $Database) { $Database = "Northwind" }
+
+        if (-not $PSDefaultParameterValues["*:Sqlinstance"]) {
+            $PSDefaultParameterValues["*:Sqlinstance"] = $SqlInstance
+        }
+        if (-not $PSDefaultParameterValues["*:SqlCredential"]) {
+            $PSDefaultParameterValues["*:SqlCredential"] = $SqlCredential
+        }
+        if (-not $PSDefaultParameterValues["*DbaDatabase:Database"]) {
+            $PSDefaultParameterValues["*DbaDatabase:Database"] = $Database
+        }
+        if (-not $PSDefaultParameterValues["*DbaQuery:Database"]) {
+            $PSDefaultParameterValues["*DbaQuery:Database"] = $Database
         }
 
         $querykey = "$servername-$username-$Database"
@@ -79,11 +95,6 @@ function Invoke-DbaiQuery {
         $processedMessages = 0
         $sentence = @()
         $msgs = @()
-
-        $PSDefaultParameterValues["*:Sqlinstance"] = $SqlInstance
-        $PSDefaultParameterValues["*:SqlCredential"] = $SqlCredential
-        $PSDefaultParameterValues["Get-DbaDatabase:Database"] = $Database
-        $PSDefaultParameterValues["Invoke-DbaQuery:Database"] = $Database
     }
     process {
         # test for single word or single character messages
@@ -115,7 +126,7 @@ function Invoke-DbaiQuery {
                 }
                 $script:threadcache[$querykey].assistant = $assistant
             }
-
+            $null = PSOpenAI\Get-ThreadRun -ThreadId $thread.id | Where-Object status -in "queued", "in_progress",  "requires_action" | Stop-ThreadRun
             $null = PSOpenAI\Add-ThreadMessage -ThreadId $thread.id -Role user -Message $msg
             $run = PSOpenAI\Start-ThreadRun -ThreadId $thread.id -Assistant $assistant.Id
             $PSDefaultParameterValues["*:RunId"] = $run.id
@@ -155,9 +166,10 @@ function Invoke-DbaiQuery {
 
                         if (-not $SkipSafetyCheck) {
                             Write-Progress -Status "Checking SQL query validity" -PercentComplete ((5 / 10) * 100)
-                            $output = Test-SqlQuery -SqlStatement $sql -Tools $assistant.tools
+                            $output = Test-SqlQuery -SqlStatement $sql
+                            #WARNING: @{issues = System.Object[]; valid = True }
 
-                            if ($output.valid_sql) {
+                            if ($output.valid) {
                                 Write-Verbose "$sql is a valid SQL statement."
 
                                 if (-not $output.dangerous) {

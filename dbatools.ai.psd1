@@ -29,9 +29,10 @@
     Description = 'dbatools.ai is a copilot for SQL Server databases'
 
     # Modules that must be imported into the global environment prior to importing this module
-    RequiredModules   = @('dbatools',
+    RequiredModules   = @(
+        'dbatools',
         @{ModuleName = 'finetuna'; ModuleVersion = '2.0' },
-    @{ModuleName = 'PSOpenAI'; ModuleVersion = '4.1.1' }
+        @{ModuleName = 'PSOpenAI'; ModuleVersion = '4.7.0' }
     )
 
     FunctionsToExport = @(
