@@ -44,11 +44,19 @@ function ConvertTo-DbaiMarkdown {
         [Parameter(ValueFromPipeline, ValueFromPipelineByPropertyName)]
         [Alias("FullName")]
         [string[]]$Path = (Join-Path $script:ModuleRootLib -ChildPath immunization.pdf),
+        [string]$Model,
         [string[]]$RequiredText,
         [switch]$Raw,
         [int]$Retry = 1
     )
     begin {
+        if (-not $Model) {
+            if ($PSDefaultParameterValues['*:Deployment']) {
+                $Model = $PSDefaultParameterValues['*:Deployment']
+            } else {
+                $Model = "gpt-4o-mini"
+            }
+        }
         Write-Verbose "Starting ConvertTo-DbaiMarkdown function"
         $PSDefaultParameterValues['Write-Progress:Activity'] = "Converting file text to markdown"
 
@@ -61,7 +69,7 @@ function ConvertTo-DbaiMarkdown {
             $splat = @{
                 Name               = $assistantName
                 Instructions       = $assistantInstructions
-                Model              = "gpt-4o-mini"
+                Model              = $Model
                 UseCodeInterpreter = $true
             }
             $assistant = New-Assistant @splat
@@ -136,11 +144,13 @@ function ConvertTo-DbaiMarkdown {
                     Content  = $response.SimpleContent.Content
                 }
 
-                if ($result.Content.ToLower().StartsWith("failure")) {
-                    Write-Verbose "Failure detected in response. Starting retry run"
-                    $run = Start-ThreadRun -ThreadId $thread.id -Assistant $assistant.id | Wait-ThreadRun
-                    $response = Get-ThreadMessage -ThreadId $thread.id -RunId $run.id | Select-Object -Last 1
-                    $result.Content = $response.SimpleContent.Content
+                if ($result.Content) {
+                    if ($result.Content.ToLower().StartsWith("failure")) {
+                        Write-Verbose "Failure detected in response. Starting retry run"
+                        $run = Start-ThreadRun -ThreadId $thread.id -Assistant $assistant.id | Wait-ThreadRun
+                        $response = Get-ThreadMessage -ThreadId $thread.id -RunId $run.id | Select-Object -Last 1
+                        $result.Content = $response.SimpleContent.Content
+                    }
                 }
 
                 if ($RequiredText) {
@@ -151,6 +161,8 @@ function ConvertTo-DbaiMarkdown {
                         while ($result.Content -notmatch [regex]::Escape($phrase) -and $retryCount -lt $Retry) {
                             $retryCount++
                             Write-Verbose "Required phrase '$phrase' not found in the output. Retry attempt $retryCount of $Retry"
+                            Write-Verbose "Output: $($result.Content)"
+                            Write-Verbose "Retry attempt $retryCount of $Retry"
                             $message = "The output seems incomplete. Please try again and ensure all relevant information is included."
                             Write-Verbose "Sending message to AI: $message"
                             $null = Add-ThreadMessage -ThreadId $thread.id -Message $message
@@ -175,11 +187,13 @@ function ConvertTo-DbaiMarkdown {
                 }
 
                 Write-Verbose "Checking for failure once more"
-                if ($result.Content.ToLower().StartsWith("failure")) {
-                    throw $result.Content
+                if ($result.Content) {
+                    if ($result.Content.ToLower().StartsWith("failure")) {
+                        throw $result.Content
+                    }
                 }
 
-                Write-Verbose "Outputting result"
+                Write-Verbose "Outputing result"
                 if ($Raw) {
                     $result.Content
                 } else {

@@ -36,14 +36,17 @@
     )
 
     FunctionsToExport = @(
+        'Clear-DbaiProvider',
         'ConvertTo-DbaiInstruction',
         'ConvertTo-DbaiMarkdown',
         'ConvertTo-DbaiStructuredObject',
         'Enter-DbaiDatabase',
+        'Get-DbaiProvider',
         'Import-DbaiFile',
         'Invoke-DbatoolsAI',
         'Invoke-DbaiQuery',
-        'New-DbaiAssistant'
+        'New-DbaiAssistant',
+        'Set-DbaiProvider'
     )
 
     CmdletsToExport = @()
