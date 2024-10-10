@@ -58,10 +58,20 @@ function New-DbaiAssistant {
         [string]$Description,
         [string]$Instructions,
         [string]$FunctionDescription,
-        [string]$Model = "gpt-4o-mini",
+        [string]$Model,
         [switch]$Force
     )
     process {
+        if (-not $Model) {
+            Write-Verbose "No model specified. Using default model."
+            if ($PSDefaultParameterValues['*:Deployment']) {
+                Write-Verbose "Using default model from PSDefaultParameterValues"
+                $Model = $PSDefaultParameterValues['*:Deployment']
+            } else {
+                Write-Verbose "Using default model from function"
+                $Model = "gpt-4o-mini"
+            }
+        }
         if ($Database) {
             Write-Verbose "Creating query function"
             $type = "database"

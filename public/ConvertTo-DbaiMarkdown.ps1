@@ -51,9 +51,12 @@ function ConvertTo-DbaiMarkdown {
     )
     begin {
         if (-not $Model) {
+            Write-Verbose "No model specified. Using default model."
             if ($PSDefaultParameterValues['*:Deployment']) {
+                Write-Verbose "Using default model from PSDefaultParameterValues"
                 $Model = $PSDefaultParameterValues['*:Deployment']
             } else {
+                Write-Verbose "Using default model from function"
                 $Model = "gpt-4o-mini"
             }
         }
