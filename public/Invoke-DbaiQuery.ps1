@@ -273,6 +273,11 @@ function Invoke-DbaiQuery {
             Write-Verbose "Fetching assistant response message"
             $messages = PSOpenAI\Get-ThreadMessage -ThreadId $thread.id | Where-Object role -eq assistant | Select-Object -First 1
 
+            if ($rundata.last_error.message) {
+                Write-Warning "Error: $($rundata.last_error.message)"
+                continue
+            }
+
             if ($As -eq "String") {
                 Write-Verbose "Returning result as string"
                 $messages.content.text.value
