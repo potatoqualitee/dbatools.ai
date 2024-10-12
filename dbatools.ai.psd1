@@ -11,7 +11,7 @@
     RootModule = 'dbatools.ai.psm1'
 
     # Version number of this module.
-    ModuleVersion = '1.3'
+    ModuleVersion = '1.4'
 
     # ID used to uniquely identify this module
     GUID = '1c4f2db2-5cff-4179-b755-ea7d228153ae'
@@ -36,14 +36,17 @@
     )
 
     FunctionsToExport = @(
+        'Clear-DbaiProvider',
         'ConvertTo-DbaiInstruction',
         'ConvertTo-DbaiMarkdown',
         'ConvertTo-DbaiStructuredObject',
         'Enter-DbaiDatabase',
+        'Get-DbaiProvider',
         'Import-DbaiFile',
         'Invoke-DbatoolsAI',
         'Invoke-DbaiQuery',
-        'New-DbaiAssistant'
+        'New-DbaiAssistant',
+        'Set-DbaiProvider'
     )
 
     CmdletsToExport = @()

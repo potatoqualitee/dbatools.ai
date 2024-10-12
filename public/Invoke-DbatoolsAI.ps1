@@ -241,6 +241,11 @@ function Invoke-DbatoolsAI {
                 }
             }
 
+            if ($rundata.last_error.message) {
+                Write-Warning "Error: $($rundata.last_error.message)"
+                continue
+            }
+
             if ($As -eq "String") {
                 $messages.content.text.value
             } elseif ($As -eq "PSObject") {

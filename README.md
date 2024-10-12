@@ -19,6 +19,7 @@ And it works surprisingly well! Check this out — I used the laziest language p
 - Progress tracking and feedback during file processing and data import
 - Conversion of various file types to Markdown format
 - Extraction of structured data from text based on JSON schemas
+- Support for both OpenAI and Azure OpenAI Services
 
 ## Supported Platforms
 + Windows PowerShell 5.1
@@ -28,7 +29,7 @@ And it works surprisingly well! Check this out — I used the laziest language p
 ## Prerequisites
 You need to sign-up for an OpenAI account and generate an API key for authentication. Visit https://platform.openai.com/account/api-keys to create your API key.
 
-Azure OpenAI Services support coming soon.
+For Azure OpenAI Services, you'll need an Azure subscription with access to Azure OpenAI services.
 
 ## Getting Started
 
@@ -43,6 +44,18 @@ Next, set your OpenAI API key as an environment variable:
 
 ```powershell
 $env:OPENAI_API_KEY = "sk-fake12345FAKE67890APIKEY12345"
+```
+
+For Azure OpenAI Services, you'll need to set the provider using the `Set-DbaiProvider` command:
+
+```powershell
+$splat = @{
+    Provider   = "Azure"
+    ApiKey     = "abcd1234efgh5678ijkl9012mnop3456"
+    ApiBase    = "https://your-azure-endpoint.openai.azure.com/"
+    Deployment = "your-deployment-name"
+}
+Set-DbaiProvider @splat
 ```
 
 Now, import the module. You don't always have to do it but sometimes you do if you JUST installed it from the Gallery and it hasn't been indexed.
@@ -153,11 +166,9 @@ New-DbaiAssistant -Name "AdventureWerks AI" -Description "AI assistant for Adven
 
 By default, the assistant uses GPT-4o which has a 128k context. That's like 97,000 words so datatypes can easily be included in the schema. If you choose any other model, it'll likely have an 8k context so the module leaves that off when building the instruction string.
 
-
 ### ConvertTo-DbaiInstruction
 
 Converts the schema of a SQL Server database to a specified format (JSON, SQL, or plain text). This function is used internally by `New-DbaiAssistant` to generate the schema representation for the AI assistant.
-
 
 ```powershell
 Get-DbaDatabase -SqlInstance sql01 -Database AdventureWerks | ConvertTo-DbaiInstruction -Type SQL
@@ -166,7 +177,6 @@ Get-DbaDatabase -SqlInstance sql01 -Database AdventureWerks | ConvertTo-DbaiInst
 I recommend using plain text as it uses the least amount of tokens.
 
 As mentioned earlier, the assistant uses GPT-4o by default, which has a 128k context. That's like 97,000 words so datatypes can easily be included in the schema. If you choose any other model, it'll likely have an 8k context so the module leaves that off when building the instruction string.
-
 
 ### Import-DbaiFile
 
@@ -213,6 +223,40 @@ $splat = @{
     SystemMessage   = "You are an assistant that extracts information from pet vaccination records."
 }
 ConvertTo-DbaiStructuredObject @splat
+```
+
+### Set-DbaiProvider
+
+Sets the OpenAI provider configuration for dbatools.ai. This function allows you to specify whether to use OpenAI's API or Azure OpenAI Services, and set the necessary authentication details.
+
+```powershell
+# Set OpenAI as the provider
+Set-DbaiProvider -Provider OpenAI -ApiKey "sk-abcdefghijklmno1234567890pqrstuvwxyz"
+
+# Set Azure OpenAI Services as the provider
+$splat = @{
+    Provider   = "Azure"
+    ApiKey     = "abcd1234efgh5678ijkl9012mnop3456"
+    ApiBase    = "https://your-azure-endpoint.openai.azure.com/"
+    Deployment = "your-deployment-name"
+}
+Set-DbaiProvider @splat
+```
+
+### Get-DbaiProvider
+
+Retrieves the current OpenAI provider configuration for dbatools.ai.
+
+```powershell
+Get-DbaiProvider
+```
+
+### Clear-DbaiProvider
+
+Clears the current OpenAI provider configuration for dbatools.ai.
+
+```powershell
+Clear-DbaiProvider
 ```
 
 ## dtai Workflow
