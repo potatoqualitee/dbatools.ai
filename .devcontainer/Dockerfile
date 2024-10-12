@@ -3,18 +3,31 @@ FROM mcr.microsoft.com/mssql/server
 # Switch to root to perform privileged operations
 USER root
 
-# Prep
-RUN apt-get update && apt-get install -y --no-install-recommends powershell-lts git dotnet-sdk-8.0
+# Install necessary packages and clean up
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    powershell-lts \
+    git \
+    dotnet-sdk-8.0 \
+    python3-pip \
+    universal-ctags && \
+    rm -rf /var/lib/apt/lists/*
 
-# Copy scripts and make them executable
-RUN mkdir -p /home/mssql/.config/powershell
-COPY ./scripts/*.ps1 /home/mssql
-RUN chmod +x /home/mssql/*.ps1
-RUN ls -la /home/mssql/*.ps1
-RUN cat /home/mssql/profile.ps1 > /home/mssql/.config/powershell/Microsoft.PowerShell_profile.ps1
-RUN cat /home/mssql/profile.ps1 > /home/mssql/.config/powershell/Microsoft.dotnet-interactive_profile.ps1
-RUN cat /home/mssql/profile.ps1 > /home/mssql/.config/powershell/Microsoft.VSCode_profile.ps1
+# Install aider-chat
+RUN python3 -m pip install aider-chat
+
+# Prepare directories, copy scripts, set permissions, and change ownership
+RUN mkdir -p /home/mssql/.config/powershell && \
+    chown -R mssql /home/mssql
+
+COPY ./scripts/*.ps1 /home/mssql/
+
+# Copy profile.ps1 to various profile locations
+RUN cp /home/mssql/profile.ps1 /home/mssql/.config/powershell/Microsoft.PowerShell_profile.ps1 && \
+    cp /home/mssql/profile.ps1 /home/mssql/.config/powershell/Microsoft.dotnet-interactive_profile.ps1 && \
+    cp /home/mssql/profile.ps1 /home/mssql/.config/powershell/Microsoft.VSCode_profile.ps1 && \
+    chmod +x /home/mssql/*.ps1 && \
+    chown -R mssql /home/mssql
 
 # Switch to the mssql user
-RUN chown -R mssql /home/mssql
 USER mssql

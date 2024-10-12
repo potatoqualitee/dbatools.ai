@@ -3,7 +3,7 @@ $PSDefaultParameterValues["*:Confirm"] = $false
 $PSDefaultParameterValues["*:Force"] = $true
 Set-PSRepository PSGallery -InstallationPolicy Trusted
 Install-Module dbatools, psopenai
-Install-Module finetuna, aitoolkit
+Install-Module finetuna, aitoolkit, Pester
 
 Write-Output "Setting up Northwind..."
 Write-Output "Downloading Northwind..."
