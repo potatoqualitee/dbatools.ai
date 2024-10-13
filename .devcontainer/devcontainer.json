@@ -34,6 +34,21 @@
                         "connectTimeout": 15,
                         "commandTimeout": 30,
                         "applicationName": "vscode-mssql"
+                    },
+                    {
+                        "server": "localhost",
+                        "database": "tempdb",
+                        "authenticationType": "SqlLogin",
+                        "user": "sa",
+                        "password": "dbatools.IO",
+                        "emptyPasswordInput": false,
+                        "savePassword": true,
+                        "profileName": "localhost",
+                        "encrypt": "Mandatory",
+                        "trustServerCertificate": true,
+                        "connectTimeout": 15,
+                        "commandTimeout": 30,
+                        "applicationName": "vscode-mssql"
                     }
                 ],
                 "powershell.powerShellAdditionalExePaths": {
