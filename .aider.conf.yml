@@ -1,11 +1,14 @@
-## Megalist: https://gist.github.com/itoonx/2021be2dab6e5c2fa7931deb70377697
-## Max number of tokens to use for repo map, use 0 to disable (default: 1024)
-## This controls the size of the repository map for context when using the AI assistant.
+## General Settings
+
+## Max number of tokens to use for repo map (default: 1024)
 map-tokens: 2048
 
 ## Specify the model to use for chat and code assistance
 ## Available models: gpt-4o, claude-3-5-sonnet, o1-preview, deepseek, etc.
 model: gpt-4o
+
+## Model for editing code
+editor-model: gpt-4o
 
 ## Enable dark mode for a better terminal appearance on dark backgrounds
 dark-mode: true
@@ -16,8 +19,8 @@ pretty: true
 ## Disable streaming responses; waits for full response before displaying
 stream: false
 
-## Disable showing differences between current and previous file versions
-show-diffs: false
+## Show the differences between current and previous file versions
+show-diffs: true
 
 ## Disable automatic commits after changes made by the AI
 auto-commits: false
@@ -26,13 +29,10 @@ auto-commits: false
 no-suggest-shell-commands: true
 
 ## Load environment variables from a specified file (default: .env in git root)
-env-file: .env.aider
+env-file: .aider/.env
 
 ## Number of pings to keep the prompt cache alive at 5-minute intervals (default: 0)
 cache-keepalive-pings: 5
-
-## Specify which files are included in the session
-file: ["*.ps1"]
 
 ## Enable caching of prompts to reduce token costs (default: false)
 cache-prompts: true
@@ -41,8 +41,7 @@ cache-prompts: true
 no-stream: true
 
 ## Add aider-specific files to .gitignore (default: true)
-## Set to false as its already tehre
-gitignore: false
+gitignore: true
 
 ## Automatically lints code after changes using PSScriptAnalyzer (PowerShell linting)
 auto-lint: true
@@ -56,21 +55,59 @@ auto-test: true
 ## Command to run PowerShell tests using Pester
 test-cmd: "pwsh -Command Invoke-Pester -Path .\\Tests"
 
-# History Files
+## Control verbosity of the output (default: false)
+verbose: true
+
+## Specify the input history file
 input-history-file: .aider/aider.input.history
+
+## Specify the chat history file
 chat-history-file: .aider/aider.chat.history.md
+
+## Specify the LLM history file
 llm-history-file: .aider/aider.llm.history
 
-# Model Settings
+## Specify model-specific settings
 model-settings-file: .aider/.aider.model.settings.yml
 model-metadata-file: .aider/.aider.model.metadata.json
 
-# Ignore file (for Git)
-aiderignore: .aider/.aiderignore
+## Completion and Suggestions
 
-# Environment File
+## Disable completion suggestions for shell commands
+suggest-shell-commands: false
+
+## Linting and Testing
+
+## Automatically lint code using a command
+lint-cmd: "pwsh -Command Invoke-ScriptAnalyzer -Path *.ps1"
+
+## Automatically run tests using Pester
+auto-test: true
+test-cmd: "pwsh -Command Invoke-Pester -Path .\\Tests"
+
+## Git Integration
+
+## Enable Git integration to track file changes
+git: true
+
+## Control whether aider-specific files are added to .gitignore
+gitignore: true
+
+## Completion Menu Colors
+
+## Set the colors for the completion menu
+#completion-menu-color: "cyan"
+#completion-menu-bg-color: "black"
+#completion-menu-current-color: "white"
+#completion-menu-current-bg-color: "blue"
+
+## Miscellaneous Settings
+
+## Timeout for long-running operations (in seconds)
+timeout: 300
+
+## Code Theme
+#code-theme: "monokai"
+
+## Environment File
 env-file: .aider/.env
-
-# model: deepseek/deepseek-chat
-# model: claude-3-5-sonnet-20240620
-# model: openrouter/openai/o1-preview
