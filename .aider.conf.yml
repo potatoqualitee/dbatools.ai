@@ -103,9 +103,6 @@ gitignore: true
 
 ## Miscellaneous Settings
 
-## Timeout for long-running operations (in seconds)
-timeout: 300
-
 ## Code Theme
 #code-theme: "monokai"
 
