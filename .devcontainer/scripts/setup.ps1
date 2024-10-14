@@ -1,10 +1,10 @@
-Write-Output "Installing PowerShell dependencies..."
 $PSDefaultParameterValues["*:Confirm"] = $false
 $PSDefaultParameterValues["*:Force"] = $true
-Set-PSRepository PSGallery -InstallationPolicy Trusted
 
 # Check if modules are already installed
 if (-not (Get-Module -ListAvailable -Name dbatools)) {
+    Write-Output "Installing PowerShell dependencies..."
+    Set-PSRepository PSGallery -InstallationPolicy Trusted
     Install-Module dbatools, Pester, aitoolkit
     Install-Module psopenai
     Install-Module finetuna
