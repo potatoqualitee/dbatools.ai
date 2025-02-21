@@ -5,10 +5,10 @@ map-tokens: 2048
 
 ## Specify the model to use for chat and code assistance
 ## Available models: gpt-4o, claude-3-5-sonnet, o1-preview, deepseek, etc.
-model: gpt-4o
+# model: gpt-4o
 
 ## Model for editing code
-editor-model: gpt-4o
+# editor-model: gpt-4o
 
 ## Enable dark mode for a better terminal appearance on dark backgrounds
 dark-mode: true
@@ -53,7 +53,7 @@ lint-cmd: "pwsh -Command Invoke-ScriptAnalyzer -Path *.ps1"
 auto-test: true
 
 ## Command to run PowerShell tests using Pester
-test-cmd: "pwsh -Command Invoke-Pester -Path .\\Tests"
+#test-cmd: "pwsh -Command Invoke-Pester -Path .\\Tests"
 
 ## Control verbosity of the output (default: false)
 verbose: true
@@ -76,22 +76,10 @@ model-metadata-file: .aider/.aider.model.metadata.json
 ## Disable completion suggestions for shell commands
 suggest-shell-commands: false
 
-## Linting and Testing
-
-## Automatically lint code using a command
-lint-cmd: "pwsh -Command Invoke-ScriptAnalyzer -Path *.ps1"
-
-## Automatically run tests using Pester
-auto-test: true
-test-cmd: "pwsh -Command Invoke-Pester -Path .\\Tests"
-
 ## Git Integration
 
 ## Enable Git integration to track file changes
 git: true
-
-## Control whether aider-specific files are added to .gitignore
-gitignore: true
 
 ## Completion Menu Colors
 
@@ -105,6 +93,3 @@ gitignore: true
 
 ## Code Theme
 #code-theme: "monokai"
-
-## Environment File
-env-file: .aider/.env
