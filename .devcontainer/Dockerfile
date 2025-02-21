@@ -8,7 +8,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     powershell-lts \
     git \
-    dotnet-sdk-8.0 \
+    dotnet-sdk-9.0 \
     python3-pip \
     universal-ctags && \
     rm -rf /var/lib/apt/lists/*
