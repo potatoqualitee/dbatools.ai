@@ -33,6 +33,9 @@ function Import-DbaiFile {
     .PARAMETER RequiredText
     An array of strings that must be present in the output. If any of these strings are missing, the function will request the AI to try again.
 
+    .PARAMETER Model
+    Specifies the model to use for data conversion. If not provided, uses the deployment set in Set-DbaiProvider.
+
     .EXAMPLE
     PS C:\> Import-DbaiFile
 
@@ -70,6 +73,20 @@ function Import-DbaiFile {
     This approach allows developers to maintain API docs in Markdown and automatically sync them to a queryable database. They can then easily generate reports, track changes over time, or even auto-generate client libraries based on the structured API data in SQL Server.
 
     The RequiredText parameter ensures that key elements of the API spec are present in the extracted data.
+
+    .EXAMPLE
+    PS C:\> $params = @{
+        Path           = "C:\Reports\FinancialReport.pdf"
+        JsonSchemaPath = "C:\Schemas\financial_report_schema.json"
+        Model          = "gpt-4"
+        SqlInstance    = "FINDB01"
+        Database       = "FinancialReports"
+        Schema         = "reports"
+        SystemMessage  = "Extract financial metrics, dates, and analysis"
+    }
+    PS C:\> Import-DbaiFile @params
+
+    This example uses GPT-4 specifically for processing a financial report, overriding any default model set via Set-DbaiProvider. This allows using more capable models for complex documents while maintaining the ability to use other models for simpler tasks.
 
 #>
     [CmdletBinding()]

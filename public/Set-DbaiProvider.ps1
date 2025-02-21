@@ -133,6 +133,22 @@ function Set-DbaiProvider {
                 ApiVersion   = $null
                 Organization = $null
             }
+            if ($ApiBase) {
+                $splat.ApiBase = $ApiBase
+            }
+            if ($ApiVersion) {
+                $splat.ApiVersion = $ApiVersion
+            }
+            if ($Organization) {
+                $splat.Organization = $Organization
+            }
+            if ($Deployment) {
+                $currentDefaults['*:Deployment'] = $Deployment
+                $currentDefaults['*:Model'] = $Deployment
+
+                # Set the updated PSDefaultParameterValues back
+                $null = Set-Variable -Name PSDefaultParameterValues -Value $currentDefaults -Force
+            }
         }
         $null = Set-OpenAIContext @splat
 
