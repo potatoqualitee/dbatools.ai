@@ -11,7 +11,7 @@
     RootModule = 'dbatools.ai.psm1'
 
     # Version number of this module.
-    ModuleVersion = '1.4'
+    ModuleVersion = '1.5'
 
     # ID used to uniquely identify this module
     GUID = '1c4f2db2-5cff-4179-b755-ea7d228153ae'
@@ -23,7 +23,7 @@
     CompanyName = 'cl'
 
     # Copyright statement for this module
-    Copyright = '(c) 2024 Chrissy LeMaire. All rights reserved.'
+    Copyright = '(c) 2025 Chrissy LeMaire. All rights reserved.'
 
     # Description of the functionality provided by this module
     Description = 'dbatools.ai is a copilot for SQL Server databases'

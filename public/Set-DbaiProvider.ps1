@@ -133,6 +133,32 @@ function Set-DbaiProvider {
                 ApiVersion   = $null
                 Organization = $null
             }
+
+            if ($ApiBase) {
+                $splat.ApiBase = $ApiBase
+                $env:OPENAI_API_BASE = $ApiBase
+            }
+
+            if ($ApiVersion) {
+                $splat.ApiVersion = $ApiVersion
+            }
+
+            if ($Organization) {
+                $splat.Organization = $Organization
+            }
+
+            if ($Deployment) {
+                $currentDefaults['*:Deployment'] = $Deployment
+                $currentDefaults['*:Model'] = $Deployment
+
+                # Set the updated PSDefaultParameterValues back
+                $splet = @{
+                    Name = "PSDefaultParameterValues"
+                    Value = $currentDefaults
+                    Force = $true
+                }
+                $null = Set-Variable @splet
+            }
         }
         $null = Set-OpenAIContext @splat
 
@@ -148,6 +174,8 @@ function Set-DbaiProvider {
             MaxRetryCount = $context.MaxRetryCount
         }
         $currentDefaults['Initialize-APIKey:ApiKey'] = $context.ApiKey
+        $currentDefaults['Initialize-APIBase:ApiBase'] = $context.ApiBase
+        $currentDefaults['Initialize-APIBase:ApiType'] = $context.ApiType
 
         $null = Set-Variable -Name PSDefaultParameterValues -Value $currentDefaults -Force
 

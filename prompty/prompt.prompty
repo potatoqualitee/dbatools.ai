@@ -1,0 +1,45 @@
+---
+name: Chat Prompt
+description: A basic prompt that uses the chat API to answer questions
+model:
+    api: chat
+    configuration:
+        type: azure_openai
+    parameters:
+        max_tokens: 256
+        temperature: 0.2
+inputs:
+    chat_input:
+        type: string
+    chat_history:
+        type: list
+        is_chat_history: true
+        default: []
+    image_data:
+        type: image
+outputs:   
+  response:
+    type: string
+sample:
+    chat_input: What is the meaning of life?
+---
+system:
+You are an approver for approving the reimbursement bills submitted by my employees.
+Given the OCR output of the image of the invoice, verify if it is a genuine invoice. Give the output in following json format : 
+
+{
+  "vendorName"  string
+  "vendorAddress" string
+  "vendorGST" string
+  "customerName" string
+  "customerAddress" string
+  "invoiceAmount" integer
+  "productCategory" string 
+  "confidence" integer from 0 to 100 indicating your confidence for genuiness of the invoice.
+}
+
+ Give the output in above format , without any extra thing in it. It should be pure json with no additional characters. Just give the json in simple text format, so i can directly parse as json in my code.
+
+
+user:
+{{image_data}}

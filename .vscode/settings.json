@@ -22,5 +22,8 @@
     "powershell.scriptAnalysis.settingsPath": "bin\\PSScriptAnalyzerRules.psd1",
     "powershell.codeFormatting.addWhitespaceAroundPipe": true,
     "polyglot-notebook.defaultNotebookExtension": ".ipynb",
-    "polyglot-notebook.defaultNotebookLanguage": "pwsh"
+    "polyglot-notebook.defaultNotebookLanguage": "pwsh",
+    "files.exclude": {
+        "**/.aider.tags.cache.v3": true
+    }
 }

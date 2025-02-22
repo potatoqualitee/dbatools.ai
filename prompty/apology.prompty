@@ -1,0 +1,25 @@
+---
+name: Apology Evaluator
+description: Apology Evaluator for QA scenario
+model:
+  api: chat
+  configuration:
+    type: azure_openai
+    connection: open_ai_connection
+    azure_deployment: gpt-4
+  parameters:
+    temperature: 0.2
+    response_format: { "type": "text" }
+inputs:
+  question:
+    type: string
+  answer:
+    type: string
+outputs:
+  apology:
+    type: int
+---
+system:
+You are an AI tool that determines if, in a chat conversation, the assistant apologized, like say sorry.
+Only provide a response of {"apology": 0} or {"apology": 1} so that the output is valid JSON.
+Give a apology of 1 if apologized in the chat conversation.

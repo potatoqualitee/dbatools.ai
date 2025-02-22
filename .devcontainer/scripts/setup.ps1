@@ -1,17 +1,31 @@
-Write-Output "Installing PowerShell dependencies..."
 $PSDefaultParameterValues["*:Confirm"] = $false
 $PSDefaultParameterValues["*:Force"] = $true
-Set-PSRepository PSGallery -InstallationPolicy Trusted
-Install-Module dbatools, psopenai
-Install-Module finetuna, aitoolkit
 
-Write-Output "Setting up Northwind..."
-Write-Output "Downloading Northwind..."
-Invoke-WebRequest https://raw.githubusercontent.com/microsoft/sql-server-samples/refs/heads/master/samples/databases/northwind-pubs/instnwnd.sql -OutFile /home/mssql/instnwnd.sql
+# Check if modules are already installed
+if (-not (Get-Module -ListAvailable -Name dbatools)) {
+    Write-Output "Installing PowerShell dependencies..."
+    Set-PSRepository PSGallery -InstallationPolicy Trusted
+    Install-Module dbatools, Pester, aitoolkit
+    Install-Module psopenai
+    Install-Module finetuna
+}
 
-# Reload profile with some settings with need
+# Fix PSOpenAI ApiBase bug
+$psopenaiModule = Get-Module -ListAvailable -Name PSOpenAI | Select-Object -First 1
+if ($psopenaiModule) {
+    $parameterPath = Join-Path $psopenaiModule.ModuleBase "Private/Get-OpenAIAPIParameter.ps1"
+    $content = Get-Content $parameterPath
+    $content = $content -replace '\$OpenAIParameter\.ApiBase = \$null', '#$OpenAIParameter.ApiBase = $null'
+    Set-Content $parameterPath $content
+}
+
+# Reload profile with some settings we need
 . $profile
 
-Write-Output "Importing Northwind..."
-Invoke-DbaQuery -SqlInstance localhost -Database master -Query "CREATE DATABASE Northwind"
-Invoke-DbaQuery -SqlInstance localhost -Database Northwind -InputFile /home/mssql/instnwnd.sql
+# Check if the Northwind database already exists
+if (-not (Get-DbaDatabase -SqlInstance localhost -Database Northwind)) {
+    Write-Output "Importing Northwind..."
+    Invoke-WebRequest https://raw.githubusercontent.com/microsoft/sql-server-samples/refs/heads/master/samples/databases/northwind-pubs/instnwnd.sql -OutFile /home/mssql/instnwnd.sql
+    Invoke-DbaQuery -SqlInstance localhost -Database master -Query "CREATE DATABASE Northwind"
+    Invoke-DbaQuery -SqlInstance localhost -Database Northwind -InputFile /home/mssql/instnwnd.sql
+}

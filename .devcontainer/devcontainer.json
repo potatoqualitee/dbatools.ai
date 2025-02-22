@@ -14,6 +14,18 @@
         "OPENAI_API_KEY": {
             "description": "This is your OpenAI key for the openai.com API.",
             "documentationUrl": "https://platform.openai.com/api-keys"
+        },
+        "GITHUB_PAT": {
+            "description": "This is your GitHub Personal Access Token for the GitHub API.",
+            "documentationUrl": "https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens"
+        },
+        "AZURE_API_KEY": {
+            "description": "This is your Azure key for the Azure AI API.",
+            "documentationUrl": "https://learn.microsoft.com/en-us/azure/api-management/api-management-authenticate-authorize-azure-openai"
+        },
+        "AZURE_API_BASE": {
+            "description": "This is your Azure base URL for the Azure AI API.",
+            "documentationUrl": "https://learn.microsoft.com/en-us/azure/api-management/api-management-authenticate-authorize-azure-openai"
         }
     },
     "customizations": {
