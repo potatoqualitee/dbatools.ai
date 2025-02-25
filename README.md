@@ -40,11 +40,30 @@ Install-Module dbatools.ai
 ```
 This command will automatically install the required dependencies, including dbatools and PSOpenAI.
 
-Next, set your OpenAI API key as an environment variable:
+### Setting Environment Variables
+
+You can set your API keys and other configuration as environment variables:
 
 ```powershell
 $env:OPENAI_API_KEY = "sk-fake12345FAKE67890APIKEY12345"
+$env:GITHUB_PAT = "your-github-pat-here"  # If needed
+$env:AZURE_API_KEY = "your-azure-api-key-here"  # If using Azure OpenAI
+$env:AZURE_API_BASE = "your-azure-api-base-here"  # If using Azure OpenAI
 ```
+
+#### Using with Devcontainers/Codespaces
+
+When using this module in a devcontainer or GitHub Codespace, the environment variables are automatically loaded from the docker-compose.yml file. You can set these variables in your local environment before starting the container, or create a `.env` file in the `.devcontainer` directory with your actual values:
+
+```
+# .devcontainer/.env
+OPENAI_API_KEY=your-openai-api-key-here
+GITHUB_PAT=your-github-pat-here
+AZURE_API_KEY=your-azure-api-key-here
+AZURE_API_BASE=your-azure-api-base-here
+```
+
+The `.env` file is included in `.gitignore` to prevent committing secrets to your repository.
 
 For Azure OpenAI Services, you'll need to set the provider using the `Set-DbaiProvider` command:
 

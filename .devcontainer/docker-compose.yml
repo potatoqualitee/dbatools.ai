@@ -1,10 +1,13 @@
 services:
   mssql:
-    env_file:
-      - .env
     environment:
+      # Default environment variables with fallback values
       - ACCEPT_EULA=${ACCEPT_EULA:-Y}
       - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD:-dbatools.IO}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - GITHUB_PAT=${GITHUB_PAT:-}
+      - AZURE_API_KEY=${AZURE_API_KEY:-}
+      - AZURE_API_BASE=${AZURE_API_BASE:-}
     build:
       context: .
       dockerfile: Dockerfile
