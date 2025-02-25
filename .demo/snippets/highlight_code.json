@@ -1,0 +1,15 @@
+[
+  {
+    "action": "unselect",
+    "path": "{FILE_PATH}"
+  },
+  {
+    "action": "highlight",
+    "path": "{FILE_PATH}",
+    "position": "{HIGHLIGHT_POSITION}"
+  },
+  {
+    "action": "waitForTimeout",
+    "timeout": "1500"
+  }
+]

@@ -1,0 +1,236 @@
+{
+  "$schema": "https://demotime.elio.dev/demo-time.schema.json",
+  "title": "PowerShell OpenAI Integration and dbatools.ai",
+  "description": "Demonstration of PowerShell OpenAI integration and dbatools.ai functionality",
+  "notes": {
+    "path": "presenter-notes.md",
+    "showOnTrigger": true
+  },
+  "demos": [
+    {
+      "title": "Wrappers vs Integrations",
+      "description": "Understanding the difference between wrappers and integrations",
+      "steps": [
+        {
+          "action": "create",
+          "path": "wrappers-vs-integrations.md",
+          "content": "# **Wrappers and Integrations**\n\n| Aspect | **Wrapper** | **Integration** |\n|----------------------|-----------------------------------------|-----------------------------------------|\n| **Definition** | Makes API calls simpler | Adds AI capabilities to existing tools |\n| **Complexity** | Basic layer over the API | Works deeply with application code |\n| **System Awareness** | Works without knowing system state or data | Uses system data like database schemas for smarter responses |\n| **Use Cases** | Basic prompt handling and responses | Natural language commands, data importing |\n| **Examples** | PSOpenAI, finetuna, aitoolkit | dbatools.ai, PSHelp.Copilot |\n\n### **Benefits of Integration**\n\n- **Efficiency**: Saves time by automating complex tasks\n- **Accessibility**: Helps non experts handle advanced operations using simple language\n- **Intelligence**: Makes better decisions by understanding your system data\n\nThe main goal of AI integration is to make both development and usage more natural through everyday language."
+        },
+        {
+          "action": "open",
+          "path": "wrappers-vs-integrations.md"
+        },
+        {
+          "action": "highlight",
+          "path": "wrappers-vs-integrations.md",
+          "position": "3:8"
+        },
+        {
+          "action": "waitForTimeout",
+          "timeout": "2000"
+        },
+        {
+          "action": "highlight",
+          "path": "wrappers-vs-integrations.md",
+          "position": "10:14"
+        }
+      ]
+    },
+    {
+      "title": "OpenAI API Basics",
+      "description": "Connecting to the OpenAI API using PowerShell",
+      "icons": {
+        "start": "terminal",
+        "end": "check"
+      },
+      "steps": [
+        {
+          "action": "create",
+          "path": "openai-basics.ps1",
+          "content": "# **Connecting to the OpenAI API using PowerShell**\n\nUsing the OpenAI API in PowerShell requires an API key from https://platform.openai.com/api-keys.\n\n### Using PSOpenAI to connect to OpenAI\n\n# Straightforward request\nRequest-ChatCompletion -Message \"What is a splat?\" | Select-Object -ExpandProperty Answer\n\n# Note the developer manually keeping track of the conversation history\nRequest-ChatCompletion -Message \"What is a splat?\"\n\n### Raw PowerShell behind the scenes\n# Set the headers\n$headers = @{\n    \"Content-Type\"  = \"application/json\"\n    \"Authorization\" = \"Bearer $env:OPENAI_API_KEY\"\n}\n\n# Prepare the messages array\n$msgs = @(\n    @{\n        role    = \"user\"\n        content = \"What is a splat?\"\n    }\n)\n\n# Create the splat for Invoke-RestMethod\n$splat = @{\n    Uri     = \"https://api.openai.com/v1/chat/completions\"\n    Method  = \"Post\"\n    Headers = $headers\n    Body    = @{\n        model    = \"gpt-4o\"\n        messages = $msgs\n    } | ConvertTo-Json\n}\n\n$response = Invoke-RestMethod @splat\n\n# Output the assistant's reply\n$response.choices[0].message.content\n\n# No history of the conversation by default\n$response\n\n# Let's set some default values\n# Set default values\n$PSDefaultParameterValues[\"Invoke-RestMethod:Headers\"] = $headers\n$PSDefaultParameterValues[\"Invoke-RestMethod:Method\"] = \"POST\"\n$PSDefaultParameterValues[\"Invoke-RestMethod:Uri\"] = \"https://api.openai.com/v1/chat/completions\"\n$PSDefaultParameterValues[\"*:OutVariable\"] = \"outvar\""
+        },
+        {
+          "action": "open",
+          "path": "openai-basics.ps1"
+        },
+        {
+          "action": "highlight",
+          "path": "openai-basics.ps1",
+          "position": "7:8"
+        },
+        {
+          "action": "waitForTimeout",
+          "timeout": "2000"
+        },
+        {
+          "action": "create",
+          "path": "openai-context.ps1",
+          "content": "### But what about PowerShell Splats? Let's narrow the response context\n# Prepare the messages array\n$msgs = @(\n    @{\n        role    = \"system\"\n        content = \"You are a PowerShell Expert.\"\n    }\n    @{\n        role    = \"user\"\n        content = \"What is a splat?\"\n    }\n)\n\n# Prepare the body\n$body = @{\n    model    = \"gpt-4o\"\n    messages = $msgs\n} | ConvertTo-Json\n\n$response = Invoke-RestMethod -Body $body\n\n# Output the assistant's reply\n$response.choices[0].message.content\n\n### Btw, how do I know which models I can use?\n(Invoke-RestMethod -Method Get -Uri https://api.openai.com/v1/models).data.id"
+        },
+        {
+          "action": "open",
+          "path": "openai-context.ps1"
+        },
+        {
+          "action": "highlight",
+          "path": "openai-context.ps1",
+          "position": "3:10"
+        },
+        {
+          "action": "executeTerminalCommand",
+          "command": "Get-Command -Module PSOpenAI | Select-Object -First 5 | Format-Table -AutoSize"
+        },
+        {
+          "action": "waitForTimeout",
+          "timeout": "3000"
+        }
+      ]
+    },
+    {
+      "title": "Assistants",
+      "description": "Creating and using OpenAI Assistants",
+      "icons": {
+        "start": "robot",
+        "end": "sparkle"
+      },
+      "steps": [
+        {
+          "action": "create",
+          "path": "assistants.ps1",
+          "content": "### Now save that like a script or a module or... an assistant.\n\nAssistants are cool because they:\n\n* Remember the conversation history\n* Can be shared with others\n* Can upload files and use them as context\n* Are all around more powerful than chat completions\n\n**Create an Assistant**\n\n$splat = @{\n    Name         = \"Chrissy LeMaire\"\n    Model        = \"gpt-4o\"\n    Instructions = 'You are PowerShell expert and dbatools creator Chrissy LeMaire. You ❤️ splats with $splat and @splat. USE A LOT OF EMOJIS PLZ'\n}\nNew-Assistant @splat\n\n**Create a conversation**\n$assistant = Get-Assistant -All | Select-Object -Last 1\n\n# Create whole thread (to keep track of convos)\n$run = New-Thread |\n       Add-ThreadMessage -Message \"What is a splat in PowerShell?\" -PassThru |\n       Start-ThreadRun -Assistant $assistant |\n       Receive-ThreadRun -Wait\n\n# Display the Assistant's Response\n$run.Messages.SimpleContent.Content | Select -Last 1\n\n### Adding attachments/images\n#Upload images for references\n$image1 = Add-OpenAIFile -File lib/copilot.example.png -Purpose vision\n$image2 = Add-OpenAIFile -File lib/immunization.png -Purpose vision\n\n# Create a Thread and add a message with images.\n$results = New-Thread |\nAdd-ThreadMessage \"Which one is PowerShell code?\" -Images $image1, $image2 -PassThru |\nStart-ThreadRun -Assistant $Assistant |\nReceive-ThreadRun -Wait\n\n($results.Messages.SimpleContent | Select -Last 1).Content"
+        },
+        {
+          "action": "open",
+          "path": "assistants.ps1"
+        },
+        {
+          "action": "highlight",
+          "path": "assistants.ps1",
+          "position": "3:7"
+        },
+        {
+          "action": "waitForTimeout",
+          "timeout": "2000"
+        },
+        {
+          "action": "highlight",
+          "path": "assistants.ps1",
+          "position": "9:15"
+        }
+      ]
+    },
+    {
+      "title": "dbatools.ai Features",
+      "description": "Exploring dbatools.ai functionality",
+      "steps": [
+        {
+          "action": "create",
+          "path": "dbatools-ai.ps1",
+          "content": "### dbatools.ai has an example command, Import-DbaiFile, that shows you how to do this\nImport-Module ./dbatools.ai.psd1 -Force\n\n$splat = @{\n    Path            = './lib/immunization.md'\n    JsonSchemaPath  = './lib/immunization.json'\n    SqlInstance     = '{SQL_INSTANCE}'\n    Database        = '{DATABASE_NAME}'\n    Schema          = 'dbo'\n    SystemMessage   = 'Convert text to structured data.'\n}\n\nImport-DbaiFile @splat\n\n### See the output!\nInvoke-DbaQuery -SqlInstance {SQL_INSTANCE} -Query \"SELECT * FROM {DATABASE_NAME}.dbo.pet_vaccinations\"\n\n## Structured Output's JSON in-depth\n# Define the JSON schema as a PowerShell object\n# You can use ChatGPT for this part, I do\n$schema = @{\n    name   = \"cultural_comparison_schema\"\n    strict = $true\n    schema = @{\n        type       = \"object\"\n        properties = @{\n            country = @{\n                type = \"string\"\n                enum = @(\"USA\", \"Belgium\", \"Germany\")\n                description = \"Is the topic more American, Belgian or German?\"\n            }\n            reasoning = @{\n                type        = \"string\"\n                description = \"What is the reasoning behind this conclusion?\"\n            }\n        }\n        required            = @(\"country\", \"reasoning\")\n        additionalProperties = $false\n    }\n}\n\n# Convert the PowerShell object to JSON\n$json = $schema | ConvertTo-Json -Depth 5\n\n# Splat parameters for Request-ChatCompletion\n$splat = @{\n    Model      = \"{MODEL_NAME}-mini\"\n    Message    = \"Is beer more American, Belgian or German?\"\n    Format     = \"json_schema\"\n    JsonSchema = $json\n}\n\n# Make the request and output to console\n((Request-ChatCompletion @splat).Answer | ConvertFrom-Json).reasoning"
+        },
+        {
+          "action": "open",
+          "path": "dbatools-ai.ps1"
+        },
+        {
+          "action": "highlight",
+          "path": "dbatools-ai.ps1",
+          "position": "3:12"
+        },
+        {
+          "action": "waitForTimeout",
+          "timeout": "2000"
+        },
+        {
+          "action": "create",
+          "path": "compare-culture.ps1",
+          "content": "### Kinda like PowerShell params? But it's output and not input.\n    \n```powershell\n[Parameter(Mandatory)]\n[ValidateSet(\"USA\", \"Belgium\", \"Germany\")]\n[string]$country\n```\n\nLet's look at this in a fun command\nfunction Compare-CountryCulture {\n<#\n    .SYNOPSIS\n    Determines if a topic is more American, Belgian or German using AI.\n\n    .DESCRIPTION\n    Uses an AI model to determine whether a given topic is more associated with the USA or Belgium and provides the reasoning.\n\n    .PARAMETER Topic\n    The topic to be analyzed.\n\n    .PARAMETER Model\n    The name of the AI model to use. Default is 'gpt-4o-mini'.\n\n    .EXAMPLE\n    PS C:\\> Compare-CountryCulture -Topic \"beer\"\n#>\n    [CmdletBinding()]\n    param(\n        [Parameter(Mandatory, ValueFromPipeline, ValueFromRemainingArguments, Position = 0)]\n        [string]$Topic,\n        [string]$Model = 'gpt-4o-mini'\n    )\n    begin {\n        # Define the JSON schema as a PowerShell object\n        $schema = @{\n            name   = \"cultural_comparison_schema\"\n            strict = $true\n            schema = @{\n                type       = \"object\"\n                properties = @{\n                    country = @{\n                        type = \"string\"\n                        enum = @(\"USA\", \"Belgium\", \"Germany\")\n                        description = \"Is the topic more American, Belgian or German?\"\n                    }\n                    reasoning = @{\n                        type        = \"string\"\n                        description = \"What is the reasoning behind this conclusion?\"\n                    }\n                }\n                required            = @(\"country\", \"reasoning\")\n                additionalProperties = $false\n            }\n        }\n\n        # Convert the PowerShell object to JSON\n        $json = $schema | ConvertTo-Json -Depth 5\n    }\n\n    process {\n        # Splat parameters for Request-ChatCompletion\n        $splat = @{\n            Model      = $Model\n            Message    = $Topic\n            Format     = \"json_schema\"\n            JsonSchema = $json\n        }\n\n        # Make the request and output to console\n        $result = Request-ChatCompletion @splat\n        $parsedResult = $result.Answer | ConvertFrom-Json\n\n        [PSCustomObject]@{\n            Topic     = $Topic\n            Country   = $parsedResult.country\n            Reasoning = $parsedResult.reasoning\n        } | Format-List *\n    }\n}\n\nCompare-CountryCulture beer\nCompare-CountryCulture food\nCompare-CountryCulture healthcare\nCompare-CountryCulture olympics\nCompare-CountryCulture artificial intelligence"
+        },
+        {
+          "action": "open",
+          "path": "compare-culture.ps1"
+        },
+        {
+          "action": "highlight",
+          "path": "compare-culture.ps1",
+          "position": "8:27"
+        },
+        {
+          "action": "waitForTimeout",
+          "timeout": "2000"
+        },
+        {
+          "action": "create",
+          "path": "dbatools-overview.md",
+          "content": "# dbatools.ai overview\n\nThis module creates copilots for SQL Server databases and dbatools commands. Oh, and imports files into databases.\n\n### **Import-DbaiFile**\nImports structured file content into a database, using AI and predefined schemas for processing.\n\n| Step                  | Description                                                                                              |\n|-----------------------|----------------------------------------------------------------------------------------------------------|\n| **Input Handling**    | Accepts file paths and predefined JSON schemas for processing.                                           |\n| **Schema Parsing**    | Uses the schema to validate and convert file content into structured data.                               |\n| **Data Import**       | Converts the file content into database commands and imports it into the specified database. |\n\n### **New-DbaiAssistant**\nCreates an AI assistant to interpret natural language commands for database tasks.\n\n| Step                 | Description                                                                                              |\n|----------------------|----------------------------------------------------------------------------------------------------------|\n| **Initialization**   | Creates an AI assistant with a specified name and instructions.                                          |\n| **Configuration**    | Sets context and schema to interpret future queries.                                                     |\n| **Caching**          | Caches the assistant for reuse in future commands.                                                       |\n\n### **Invoke-DbaiQuery**\nConverts natural language into SQL queries, referencing the database schema for accuracy.\n\n| Step                    | Description                                                                                             |\n|-------------------------|---------------------------------------------------------------------------------------------------------|\n| **Input Handling**      | Accepts a natural language query related to database operations.                                        |\n| **AI Processing**       | Uses an AI assistant to interpret input and generate an SQL (T-SQL) query.                              |\n| **Schema Consultation** | References database schema (tables, columns) for constructing the query accurately.                     |\n\n### **Invoke-DbatoolsAI**\nTranslates natural language input into `dbatools` commands, focusing on operations like `Copy-DbaDatabase`.\n\n| Step                   | Description                                                                                              |\n|------------------------|----------------------------------------------------------------------------------------------------------|\n| **Assistant Setup**    | Checks for an existing assistant or creates one using cached instructions.                              |\n| **Message Processing** | Processes natural language input and sends it to the assistant for interpretation.                      |\n| **Command Execution**  | Converts input into a `dbatools` command.                                                               |"
+        },
+        {
+          "action": "open",
+          "path": "dbatools-overview.md"
+        },
+        {
+          "action": "highlight",
+          "path": "dbatools-overview.md",
+          "position": "1:3"
+        },
+        {
+          "action": "waitForTimeout",
+          "timeout": "2000"
+        },
+        {
+          "action": "highlight",
+          "path": "dbatools-overview.md",
+          "position": "5:9"
+        },
+        {
+          "action": "executeVSCodeCommand",
+          "command": "markdown.showPreview",
+          "path": "dbatools-overview.md"
+        },
+        {
+          "action": "waitForTimeout",
+          "timeout": "3000"
+        }
+      ]
+    },
+    {
+      "title": "dbatools.ai Commands",
+      "description": "Examples of dbatools.ai commands in action",
+      "steps": [
+        {
+          "action": "create",
+          "path": "dbatools-commands.ps1",
+          "content": "# Create a database assistant\nGet-DbaDatabase -SqlInstance {SQL_INSTANCE} -Database Northwind | New-DbaiAssistant\n\n# Query using natural language\nInvoke-DbaiQuery Any employee birthdays in December?\n\n# Use dbatools commands with natural language\nInvoke-DbatoolsAI Simulate what would happen if I tried to copy the SalesDB database from sql01 to sql02 using the network share \\\\NetworkPath and backup/restore. No questions, just try it. If it fails, tell me the command you ran then give me some suggestions on how to fix it."
+        },
+        {
+          "action": "open",
+          "path": "dbatools-commands.ps1"
+        },
+        {
+          "action": "snippet",
+          "contentPath": "./snippets/highlight_code.json",
+          "args": {
+            "FILE_PATH": "dbatools-commands.ps1",
+            "HIGHLIGHT_POSITION": "1:2"
+          }
+        },
+        {
+          "action": "snippet",
+          "contentPath": "./snippets/highlight_code.json",
+          "args": {
+            "FILE_PATH": "dbatools-commands.ps1",
+            "HIGHLIGHT_POSITION": "4:5"
+          }
+        },
+        {
+          "action": "snippet",
+          "contentPath": "./snippets/highlight_code.json",
+          "args": {
+            "FILE_PATH": "dbatools-commands.ps1",
+            "HIGHLIGHT_POSITION": "7:8"
+          }
+        }
+      ]
+    }
+  ]
+}

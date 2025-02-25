@@ -1,0 +1,6 @@
+{
+  "API_KEY_URL": "https://platform.openai.com/api-keys",
+  "MODEL_NAME": "gpt-4o",
+  "SQL_INSTANCE": "localhost",
+  "DATABASE_NAME": "tempdb"
+}
