@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/mssql/server
+FROM mcr.microsoft.com/azure-sql-edge
 
 # Switch to root to perform privileged operations
 USER root
