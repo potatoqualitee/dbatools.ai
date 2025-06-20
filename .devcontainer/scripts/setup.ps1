@@ -6,7 +6,7 @@ if (-not (Get-Module -ListAvailable -Name dbatools)) {
     Write-Output "Installing PowerShell dependencies..."
     Set-PSRepository PSGallery -InstallationPolicy Trusted
     Install-Module dbatools, Pester, aitoolkit
-    Install-Module psopenai #-RequiredVersion 4.25.0
+    Install-Module psopenai
     Install-Module finetuna
 }
 
@@ -29,3 +29,13 @@ if (-not (Get-DbaDatabase -SqlInstance localhost -Database Northwind)) {
     Invoke-DbaQuery -SqlInstance localhost -Database master -Query "CREATE DATABASE Northwind"
     Invoke-DbaQuery -SqlInstance localhost -Database Northwind -InputFile /home/mssql/instnwnd.sql
 }
+
+# if tempdb.dbo.pet_vaccinations exists, drop it
+$params = @{
+    SqlInstance = "localhost"
+    Database    = "tempdb"
+    Table       = "pet_vaccinations"
+    Confirm     = $false
+}
+
+Remove-DbaDbTable @params
