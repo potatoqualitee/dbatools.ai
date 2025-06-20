@@ -11,11 +11,15 @@ RUN apt-get update && \
     dotnet-sdk-9.0 \
     python3-pip \
     poppler-utils \
+    curl \
     universal-ctags && \
     rm -rf /var/lib/apt/lists/*
 
 # Install aider-chat
 RUN python3 -m pip install --no-cache-dir aider-chat
+
+# Install ollama
+RUN curl -fsSL https://ollama.com/install.sh | sh
 
 # Prepare directories, copy scripts, set permissions, and change ownership
 RUN mkdir -p /home/mssql/.config/powershell && \
