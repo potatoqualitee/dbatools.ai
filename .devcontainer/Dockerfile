@@ -10,11 +10,12 @@ RUN apt-get update && \
     git \
     dotnet-sdk-9.0 \
     python3-pip \
+    poppler-utils \
     universal-ctags && \
     rm -rf /var/lib/apt/lists/*
 
 # Install aider-chat
-RUN python3 -m pip install aider-chat
+RUN python3 -m pip install --no-cache-dir aider-chat
 
 # Prepare directories, copy scripts, set permissions, and change ownership
 RUN mkdir -p /home/mssql/.config/powershell && \

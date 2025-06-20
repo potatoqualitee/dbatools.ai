@@ -6,7 +6,7 @@ if (-not (Get-Module -ListAvailable -Name dbatools)) {
     Write-Output "Installing PowerShell dependencies..."
     Set-PSRepository PSGallery -InstallationPolicy Trusted
     Install-Module dbatools, Pester, aitoolkit
-    Install-Module psopenai
+    Install-Module psopenai #-RequiredVersion 4.25.0
     Install-Module finetuna
 }
 
