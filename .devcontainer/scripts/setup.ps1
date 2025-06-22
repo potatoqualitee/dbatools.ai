@@ -29,3 +29,13 @@ if (-not (Get-DbaDatabase -SqlInstance localhost -Database Northwind)) {
     Invoke-DbaQuery -SqlInstance localhost -Database master -Query "CREATE DATABASE Northwind"
     Invoke-DbaQuery -SqlInstance localhost -Database Northwind -InputFile /home/mssql/instnwnd.sql
 }
+
+# if tempdb.dbo.pet_vaccinations exists, drop it
+$params = @{
+    SqlInstance = "localhost"
+    Database    = "tempdb"
+    Table       = "pet_vaccinations"
+    Confirm     = $false
+}
+
+Remove-DbaDbTable @params
