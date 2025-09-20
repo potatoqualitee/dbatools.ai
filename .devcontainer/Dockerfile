@@ -35,5 +35,16 @@ RUN cp /home/mssql/profile.ps1 /home/mssql/.config/powershell/Microsoft.PowerShe
     chmod +x /home/mssql/*.ps1 && \
     chown -R mssql /home/mssql
 
+RUN python3 -m pip install --no-cache-dir \
+    notebook \
+    jupyterlab \
+    ipykernel
+
+RUN apt-get update && apt-get install -y curl && \
+    curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
+    apt-get install -y nodejs
+
+RUN python3 -m ipykernel install --name=python3 --display-name "Python 3" --prefix=/usr/local/
+
 # Switch to the mssql user
 USER mssql
