@@ -5,9 +5,22 @@
         "docker-compose.yml"
     ],
     "service": "mssql",
+    "forwardPorts": [
+        1433,
+        11434,
+        6333
+    ],
     "portsAttributes": {
         "1433": {
             "label": "MSSQL"
+        },
+        "11434": {
+            "label": "Ollama API",
+            "onAutoForward": "notify"
+        },
+        "6333": {
+            "label": "Qdrant",
+            "onAutoForward": "notify"
         }
     },
     "secrets": {
