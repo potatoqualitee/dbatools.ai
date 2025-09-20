@@ -2,7 +2,8 @@
     "name": "dbatools.ai",
     "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
     "dockerComposeFile": [
-        "docker-compose.yml"
+        "docker-compose.yml",
+        "docker-compose-qdrant.yml"
     ],
     "service": "mssql",
     "forwardPorts": [
@@ -19,8 +20,7 @@
             "onAutoForward": "notify"
         },
         "6333": {
-            "label": "Qdrant",
-            "onAutoForward": "notify"
+            "label": "Qdrant"
         }
     },
     "secrets": {

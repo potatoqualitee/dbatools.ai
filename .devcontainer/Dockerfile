@@ -12,7 +12,8 @@ RUN apt-get update && \
     python3-pip \
     poppler-utils \
     curl \
-    universal-ctags && \
+    universal-ctags \
+    wget && \
     rm -rf /var/lib/apt/lists/*
 
 # Install aider-chat
