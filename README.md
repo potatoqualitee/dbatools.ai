@@ -69,7 +69,7 @@ For Azure OpenAI Services, you'll need to set the provider using the `Set-DbaiPr
 
 ```powershell
 $splat = @{
-    Provider   = "Azure"
+    ApiType    = "Azure"
     ApiKey     = "abcd1234efgh5678ijkl9012mnop3456"
     ApiBase    = "https://your-azure-endpoint.openai.azure.com/"
     Deployment = "your-deployment-name"
